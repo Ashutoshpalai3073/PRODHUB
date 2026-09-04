@@ -18,6 +18,15 @@ interface Env {
   RESEND_API_KEY?: string;
 }
 
+// ─── Groq models ──────────────────────────────────────────────────────────────
+// Groq retires models without notice — `llama-3.3-70b-versatile` was previously
+// hard-coded in three places and started returning 404 model_not_found, which
+// silently broke both FitScore and the chatbot. Keep the ids here so a future
+// retirement is a one-line fix. Check availability with:
+//   curl -H "Authorization: Bearer $GROQ_API_KEY" https://api.groq.com/openai/v1/models
+const GROQ_MODEL_ANALYSIS = 'openai/gpt-oss-20b'; // FitScore — free-tier friendly, strict JSON
+const GROQ_MODEL_CHAT     = 'openai/gpt-oss-20b'; // Chatbot — lower latency
+
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
 };
@@ -64,8 +73,8 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
   return brandedErrorResponse();
 }
 
-// ─── IncuScore Phase 1 — AI startup analysis ──────────────────────────────────
-async function handleIncuScorePhase1(request: Request): Promise<Response> {
+// ─── FitScore Phase 1 — AI startup analysis ──────────────────────────────────
+async function handleFitScorePhase1(request: Request): Promise<Response> {
   try {
     const body = await request.json() as {
       name: string; founder: string; industry: string;
@@ -172,9 +181,16 @@ Respond ONLY with a valid JSON object, no markdown, no explanation, no commentar
 }`;
 
     const response = await groq.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
-      max_tokens: 1200,
+      model: GROQ_MODEL_ANALYSIS,
+      // The response carries scores + remark + 3 strengths + 2 red flags +
+      // 3 improvements + 3 VC questions + comparables + keywords. At 1200 the
+      // JSON was cut off mid-string and every call fell through to the generic
+      // fallback score of 52. Reasoning models also spend tokens before the
+      // answer, so keep plenty of headroom.
+      max_tokens: 4096,
       temperature: 0.2,
+      // Guarantees syntactically valid JSON rather than relying on fence-stripping.
+      response_format: { type: 'json_object' },
       messages: [{ role: 'user', content: prompt }],
     });
 
@@ -200,14 +216,14 @@ Respond ONLY with a valid JSON object, no markdown, no explanation, no commentar
     return new Response(
       JSON.stringify({
         total: 52, phase: 1, band: 'Pre-seed Potential',
-        remark: 'Initial analysis could not be completed. Provide a detailed description covering your problem, target market, and business model for an accurate IncuScore.',
-        strengths: ['Startup registered on Incutrack', 'Funding goal articulated', 'Ready to be evaluated'],
+        remark: 'Initial analysis could not be completed. Provide a detailed description covering your problem, target market, and business model for an accurate FitScore.',
+        strengths: ['Startup registered on Sanyog', 'Funding goal articulated', 'Ready to be evaluated'],
         redFlags: ['Description too brief for meaningful analysis', 'Market size not validated yet'],
         improvements: ['Write a detailed description (200+ words) covering the problem, solution, and target customer', 'Mention your revenue model explicitly', 'Add founder background and relevant experience'],
         vcQuestions: ['Who exactly is your target customer and what do they pay today?', 'Why are you the right team to solve this?', 'What is your go-to-market strategy for the first 100 customers?'],
         comparables: ['Unable to determine without more details'],
         keywords: ['startup', 'early-stage', 'india', 'building', 'founder'],
-        investorMessage: 'Enrich your startup profile with a detailed description and upload a pitch deck to unlock your full IncuScore.',
+        investorMessage: 'Enrich your startup profile with a detailed description and upload a pitch deck to unlock your full FitScore.',
         scores: { problemMarketFit: 11, marketSizeTiming: 10, solutionMoat: 10, businessModelViability: 11, founderMarketFit: 10 },
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
@@ -376,8 +392,8 @@ async function extractDocumentContent(fileUrl: string, ext: string): Promise<str
   }
 }
 
-// ─── IncuScore Phase 2 — Document-weighted rescore ───────────────────────────
-async function handleIncuScorePhase2(request: Request): Promise<Response> {
+// ─── FitScore Phase 2 — Document-weighted rescore ───────────────────────────
+async function handleFitScorePhase2(request: Request): Promise<Response> {
   let bodyParsed: {
     previousScore: number; startupName: string; documentName: string;
     documentType: string; documentStatus: string; industry: string;
@@ -427,7 +443,7 @@ STARTUP CONTEXT:
 - Company: ${startupName}
 - Industry: ${industry}
 - Startup Description: "${description}"
-- Current IncuScore: ${previousScore}/100
+- Current FitScore: ${previousScore}/100
 
 DOCUMENT METADATA:
 - Name: "${documentName}"
@@ -506,9 +522,10 @@ Respond ONLY with valid JSON, no markdown, no extra text:
 }`;
 
     const response = await groq.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
-      max_tokens: 1400,
+      model: GROQ_MODEL_ANALYSIS,
+      max_tokens: 4096, // see the note on Phase 1 — 1400 truncated the JSON
       temperature: 0.15,
+      response_format: { type: 'json_object' },
       messages: [{ role: 'user', content: prompt }],
     });
 
@@ -569,7 +586,7 @@ Respond ONLY with valid JSON, no markdown, no extra text:
     return new Response(
       JSON.stringify({
         finalScore, delta, phase: 2, band,
-        remark: 'Document received and factored into your IncuScore. A detailed pitch deck or financial model will yield the highest score improvement.',
+        remark: 'Document received and factored into your FitScore. A detailed pitch deck or financial model will yield the highest score improvement.',
         documentInsights: [
           `${docType} submission (${docStatus}) adds meaningful signal to your investor profile`,
           'Upload a Final-status Pitch Deck or full Bundle for maximum score impact',
@@ -912,7 +929,7 @@ async function handleDocumentInsert(request: Request): Promise<Response> {
       status,
       date:  `${months[today.getMonth()]} ${today.getDate()}`,
       views: 0,
-      score: 50, // placeholder — real score set by IncuScore Phase 2 after analysis
+      score: 50, // placeholder — real score set by FitScore Phase 2 after analysis
       file_url,
       file_path,
       startup_name: startupName,
@@ -955,12 +972,13 @@ async function handleChatRequest(request: Request, _env: unknown): Promise<Respo
     const { messages, context } = await request.json() as { messages: ChatCompletionMessageParam[]; context?: { pathname?: string; tab?: string; section?: string } };
     const groq = new Groq({ apiKey: process.env.GROQ_API_KEY ?? '' });
     const knowledge = getContextualKnowledge(context);
-    const SYSTEM_PROMPT = `You are a helpful assistant for Incutrack, a marketplace connecting startup founders with investors.
+    const SYSTEM_PROMPT = `You are a helpful assistant for Sanyog, an innovation procurement platform connecting government departments with startups — from challenge statement, through a sandbox pilot, to compliant scale-up. It is NOT an investment or fundraising platform.
   Use ONLY the platform knowledge below to answer user questions. If a page/tab context is provided, tailor your reply to that context in addition to the global knowledge, but do not refuse to answer general questions when the user is not on a specific tab.
   Answer strictly from the public product information provided. Never disclose internal systems, source code, infrastructure, databases, security/authentication, admin operations, API details, or any specific user's data — decline politely and redirect if asked. Do not invent facts that are not in the knowledge below.
-  Be friendly, concise, and helpful. If you cannot answer, say: "For more details, please reach out to the Incutrack team."\n\n${knowledge}`;
+  Never invent legal citations, rule numbers, scheme names, monetary thresholds or eligibility figures. If asked for a precise legal provision or threshold that is not in the knowledge below, say it should be confirmed with the department or the Sanyog team.
+  Be friendly, concise, and helpful. If you cannot answer, say: "For more details, please reach out to the Sanyog team."\n\n${knowledge}`;
     const response = await groq.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
+      model: GROQ_MODEL_CHAT,
       max_tokens: 500,
       messages: [{ role: 'system' as const, content: SYSTEM_PROMPT }, ...messages],
     });
@@ -1245,7 +1263,7 @@ async function handleAdvanceReview(request: Request): Promise<Response> {
   if (!id || !['approve', 'reject'].includes(action)) return jsonRes({ error: 'Invalid request.' }, 400);
   await db.from('startup_advance_requests').update({ status: action === 'approve' ? 'approved' : 'rejected' }).eq('id', id);
   if (action === 'approve' && startup_id && target_stage) {
-    const newRaised = target_stage === 'Funding Secured' ? undefined : undefined; // let client handle raised
+    const newRaised = target_stage === 'Scaled' ? undefined : undefined; // let client handle raised
     await db.from('startups').update({ stage: target_stage }).eq('id', startup_id);
   }
   return jsonRes({ ok: true });
@@ -1309,11 +1327,11 @@ async function sendOTPEmail(to: string, otp: string, apiKey: string): Promise<vo
     method: 'POST',
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      from: 'Incutrack <otp@drusti.online>',
+      from: 'Sanyog <otp@drusti.online>',
       to: [to],
-      subject: 'Incutrack Verification',
-      text: `Your Incutrack verification code is: ${otp}\n\nEnter this code to continue. It expires in 10 minutes.\n\nIf you didn't request this, ignore this email.`,
-      html: `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;padding:0;background:#0a0a14;font-family:Inter,Arial,sans-serif"><div style="max-width:480px;margin:40px auto;background:#0d0d1f;border-radius:16px;padding:40px 32px;text-align:center"><div style="width:48px;height:48px;background:#7c3aed;border-radius:12px;margin:0 auto 20px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><h2 style="color:#ffffff;font-size:20px;font-weight:700;margin:0 0 8px">Incutrack Verification</h2><p style="color:#9ca3af;font-size:14px;margin:0 0 28px">Enter this code to continue. It expires in <strong style="color:#ffffff">10 minutes</strong>.</p><div style="background:linear-gradient(135deg,#7c3aed,#a855f7);border-radius:12px;padding:24px;margin-bottom:24px"><p style="color:#ffffff;font-size:36px;font-weight:800;letter-spacing:14px;margin:0">${otp}</p></div><p style="color:#6b7280;font-size:12px;margin:0">If you didn't request this, ignore this email.</p></div></body></html>`,
+      subject: 'Sanyog Verification',
+      text: `Your Sanyog verification code is: ${otp}\n\nEnter this code to continue. It expires in 10 minutes.\n\nIf you didn't request this, ignore this email.`,
+      html: `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;padding:0;background:#0a0a14;font-family:Inter,Arial,sans-serif"><div style="max-width:480px;margin:40px auto;background:#0d0d1f;border-radius:16px;padding:40px 32px;text-align:center"><div style="width:48px;height:48px;background:#7c3aed;border-radius:12px;margin:0 auto 20px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><h2 style="color:#ffffff;font-size:20px;font-weight:700;margin:0 0 8px">Sanyog Verification</h2><p style="color:#9ca3af;font-size:14px;margin:0 0 28px">Enter this code to continue. It expires in <strong style="color:#ffffff">10 minutes</strong>.</p><div style="background:linear-gradient(135deg,#7c3aed,#a855f7);border-radius:12px;padding:24px;margin-bottom:24px"><p style="color:#ffffff;font-size:36px;font-weight:800;letter-spacing:14px;margin:0">${otp}</p></div><p style="color:#6b7280;font-size:12px;margin:0">If you didn't request this, ignore this email.</p></div></body></html>`,
     }),
   });
   if (!res.ok) {
@@ -1658,7 +1676,7 @@ async function handleGoogleCallback(request: Request, env: Env): Promise<Respons
   const { data: emailUser, error: emailLookupErr } = await admin.from('users').select('*').eq('email', googleUser.email).maybeSingle();
   if (emailLookupErr) {
     console.error('[google-callback] users table lookup failed:', JSON.stringify(emailLookupErr));
-    console.error('[google-callback] → Have you run src/migrations/001_auth_tables.sql in your Supabase dashboard?');
+    console.error('[google-callback] → Have you run src/migrations/sanyog/01_core.sql in your Supabase dashboard?');
     return redirect('db_error');
   }
 
@@ -1702,7 +1720,7 @@ async function handleGoogleCallback(request: Request, env: Env): Promise<Respons
       }
       if (insertResult.error) {
         console.error('[google-callback] user insert failed:', JSON.stringify(insertResult.error));
-        console.error('[google-callback] → Have you run src/migrations/001_auth_tables.sql in your Supabase dashboard?');
+        console.error('[google-callback] → Have you run src/migrations/sanyog/01_core.sql in your Supabase dashboard?');
         return redirect('db_error');
       }
       if (!insertResult.data) {
@@ -2091,12 +2109,12 @@ async function sendFounderMessageEmail(opts: {
     method: 'POST',
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      from: 'Incutrack <notify@drusti.online>',
+      from: 'Sanyog <notify@drusti.online>',
       to: [to],
       reply_to: vcEmail,
-      subject: `${from} messaged you on Incutrack`,
-      text: `${from} reached out to you about ${startup} via Incutrack Scout Hub:\n\n"${message}"\n\nReply to this email to respond directly to ${vcEmail}.`,
-      html: `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;padding:0;background:#0a0a14;font-family:Inter,Arial,sans-serif"><div style="max-width:520px;margin:32px auto;background:#0d0d1f;border-radius:16px;overflow:hidden;border:1px solid rgba(139,92,246,.2)"><div style="padding:22px 28px;border-bottom:1px solid rgba(255,255,255,.07)"><div style="display:inline-flex;align-items:center;gap:8px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22d3ee"></span><span style="color:#9ca3af;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase">Incutrack · Scout Hub</span></div></div><div style="padding:28px"><p style="color:#fff;font-size:16px;font-weight:700;margin:0 0 4px">Hi ${esc(founderName)},</p><p style="color:#9ca3af;font-size:14px;margin:0 0 20px;line-height:1.6"><strong style="color:#c4b5fd">${esc(from)}</strong> sent you a message about <strong style="color:#fff">${esc(startup)}</strong> on Incutrack.</p><div style="background:rgba(6,182,212,.07);border:1px solid rgba(6,182,212,.22);border-left:3px solid #22d3ee;border-radius:10px;padding:16px 18px;margin-bottom:22px"><p style="color:#e5e7eb;font-size:14px;line-height:1.65;margin:0;font-style:italic">${htmlMsg}</p></div><a href="mailto:${esc(vcEmail)}" style="display:inline-block;background:linear-gradient(90deg,#0e7490,#06b6d4);color:#fff;text-decoration:none;font-size:14px;font-weight:700;padding:11px 24px;border-radius:999px">Reply to ${esc(vcName)}</a><p style="color:#6b7280;font-size:12px;margin:22px 0 0">Or just reply to this email — it goes straight to ${esc(vcEmail)}.</p></div></div></body></html>`,
+      subject: `${from} messaged you on Sanyog`,
+      text: `${from} reached out to you about ${startup} via Sanyog Scout Hub:\n\n"${message}"\n\nReply to this email to respond directly to ${vcEmail}.`,
+      html: `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;padding:0;background:#0a0a14;font-family:Inter,Arial,sans-serif"><div style="max-width:520px;margin:32px auto;background:#0d0d1f;border-radius:16px;overflow:hidden;border:1px solid rgba(139,92,246,.2)"><div style="padding:22px 28px;border-bottom:1px solid rgba(255,255,255,.07)"><div style="display:inline-flex;align-items:center;gap:8px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22d3ee"></span><span style="color:#9ca3af;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase">Sanyog · Scout Hub</span></div></div><div style="padding:28px"><p style="color:#fff;font-size:16px;font-weight:700;margin:0 0 4px">Hi ${esc(founderName)},</p><p style="color:#9ca3af;font-size:14px;margin:0 0 20px;line-height:1.6"><strong style="color:#c4b5fd">${esc(from)}</strong> sent you a message about <strong style="color:#fff">${esc(startup)}</strong> on Sanyog.</p><div style="background:rgba(6,182,212,.07);border:1px solid rgba(6,182,212,.22);border-left:3px solid #22d3ee;border-radius:10px;padding:16px 18px;margin-bottom:22px"><p style="color:#e5e7eb;font-size:14px;line-height:1.65;margin:0;font-style:italic">${htmlMsg}</p></div><a href="mailto:${esc(vcEmail)}" style="display:inline-block;background:linear-gradient(90deg,#0e7490,#06b6d4);color:#fff;text-decoration:none;font-size:14px;font-weight:700;padding:11px 24px;border-radius:999px">Reply to ${esc(vcName)}</a><p style="color:#6b7280;font-size:12px;margin:22px 0 0">Or just reply to this email — it goes straight to ${esc(vcEmail)}.</p></div></div></body></html>`,
     }),
   });
   if (!res.ok) {
@@ -2317,10 +2335,10 @@ export default {
       return handleChatRequest(request, env);
 
     if (pathname === '/api/incuscore/phase1' && method === 'POST')
-      return handleIncuScorePhase1(request);
+      return handleFitScorePhase1(request);
 
     if (pathname === '/api/incuscore/phase2' && method === 'POST')
-      return handleIncuScorePhase2(request);
+      return handleFitScorePhase2(request);
 
     if (pathname === '/api/documents' && method === 'POST')
       return handleDocumentInsert(request);

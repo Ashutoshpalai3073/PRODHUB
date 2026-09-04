@@ -2,11 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "dev",
+      "name": "sanyog",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--", "--port", "8082", "--strictPort"],
-      "port": 8082,
-      "autoPort": true
+      "runtimeArgs": ["run", "dev"],
+      "port": 8080
     }
   ]
 }

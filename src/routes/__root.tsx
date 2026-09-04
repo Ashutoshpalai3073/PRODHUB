@@ -73,20 +73,31 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1.0, maximum-scale=5.0" },
-      { title: "Lovable App" },
-      { name: "description", content: "Integrate interactive 3D scenes into your React application with this component." },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Integrate interactive 3D scenes into your React application with this component." },
+      { title: "Sanyog — Innovation Procurement for Government" },
+      { name: "description", content: "Sanyog is an end-to-end innovation procurement pathway connecting government departments with recognised startups — from challenge statement to sandbox pilot to validated scale-up." },
+      { name: "author", content: "Sanyog" },
+      { property: "og:title", content: "Sanyog — Innovation Procurement for Government" },
+      { property: "og:description", content: "From challenge to pilot to scale — a transparent, compliant procurement pathway between government departments and recognised startups." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
-      { name: "twitter:title", content: "Lovable App" },
-      { name: "twitter:description", content: "Integrate interactive 3D scenes into your React application with this component." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/883c8136-2d36-45ef-a09c-9647e5126d01/id-preview-29d767cd--9c9394ad-d701-4aeb-ad82-8b46011c3f64.lovable.app-1779389876244.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/883c8136-2d36-45ef-a09c-9647e5126d01/id-preview-29d767cd--9c9394ad-d701-4aeb-ad82-8b46011c3f64.lovable.app-1779389876244.png" },
+      { name: "twitter:title", content: "Sanyog — Innovation Procurement for Government" },
+      { name: "twitter:description", content: "From challenge to pilot to scale — a transparent, compliant procurement pathway between government departments and recognised startups." },
     ],
     links: [
+      // ── Typography ─────────────────────────────────────────────────────────
+      // The UI has always asked for Inter (see the root containers in index.tsx /
+      // scout.tsx), but the family was never actually loaded, so every browser
+      // silently fell back to system-ui. These links are what make the intended
+      // type system real:
+      //   Inter                → all UI and body copy
+      //   IBM Plex Mono        → numerals, KPI values and metric labels
+      //   Noto Sans Devanagari → the संयोग wordmark
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@300..800&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+Devanagari:wght@500;700&display=swap",
+      },
       {
         rel: "stylesheet",
         href: appCss,

@@ -17,11 +17,11 @@ export const Route = createFileRoute("/")({
   component: Index,
   head: () => ({
     meta: [
-      { title: "Incutrack — The OS for Startup Founders" },
+      { title: "Sanyog — Innovation Procurement for Government" },
       {
         name: "description",
         content:
-          "A common platform built for startup founders and incubators: track growth, ship faster, and turn ideas into traction.",
+          "Sanyog gives government departments a compliant path from problem statement to sandbox pilot to scale-up, and gives recognised startups a way in without turnover or prior-experience barriers.",
       },
     ],
   }),
@@ -243,7 +243,7 @@ function DustCanvas({ heroRef, onDone }: { heroRef: React.RefObject<HTMLDivEleme
         oc.beginPath(); oc.moveTo(r.left + rad, r.top); oc.lineTo(r.right - rad, r.top); oc.arcTo(r.right, r.top, r.right, r.top + rad, rad); oc.lineTo(r.right, r.bottom - rad); oc.arcTo(r.right, r.bottom, r.right - rad, r.bottom, rad); oc.lineTo(r.left + rad, r.bottom); oc.arcTo(r.left, r.bottom, r.left, r.bottom - rad, rad); oc.lineTo(r.left, r.top + rad); oc.arcTo(r.left, r.top + rad, r.left + rad, r.top, rad); oc.closePath();
         oc.fillStyle = "rgba(139,92,246,0.18)"; oc.fill(); oc.strokeStyle = "rgba(255,255,255,0.12)"; oc.lineWidth = 1; oc.stroke();
         oc.font = font(badge); oc.fillStyle = "rgba(200,200,215,0.85)"; oc.textBaseline = "middle";
-        oc.fillText("✦  Built for founders & incubators", r.left + 14, r.top + r.height / 2); oc.textBaseline = "alphabetic";
+        oc.fillText("✦  Built for departments & recognised startups", r.left + 14, r.top + r.height / 2); oc.textBaseline = "alphabetic";
       }
       const spans = hero.querySelectorAll<HTMLElement>("[data-dust='h1'] span");
       const h1G: [number, string][][] = [[[0, "#ffffff"], [1, "#a3a3a3"]], [[0, "#a78bfa"], [0.45, "#7dd3fc"], [1, "#6ee7b7"]], [[0, "#7dd3fc"], [1, "#6ee7b7"]]];
@@ -376,7 +376,7 @@ function OrbitingSystemCanvas() {
 }
 
 /* ══════════════════════════════════════════════════════════
-   SECTION 1 — PULSAR CANVAS (Founders)
+   SECTION 1 — PULSAR CANVAS (Startups)
 ══════════════════════════════════════════════════════════ */
 function PulsarCanvas() {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -459,7 +459,7 @@ function PulsarCanvas() {
 }
 
 /* ══════════════════════════════════════════════════════════
-   SECTION 2 — WORMHOLE CANVAS (Investors)
+   SECTION 2 — WORMHOLE CANVAS (Departments)
 ══════════════════════════════════════════════════════════ */
 function WormholeCanvas() {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -1222,17 +1222,17 @@ function Index() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const footerLinks = [
-    { heading: 'Platform', links: ['Explore Hub', 'Scout Hub', 'Pipeline', 'Analytics', 'Brand Vault'] },
+    { heading: 'Platform', links: ['Startup Hub', 'Department Hub', 'Challenges', 'Analytics', 'Solution Vault'] },
     { heading: 'Company', links: ['About Us', 'Careers', 'Blog', 'Press Kit', 'Changelog'] },
-    { heading: 'Legal', links: ['Privacy Policy', 'Terms of Service', 'Cookie Policy', 'Security', 'Compliance'] },
+    { heading: 'Legal', links: ['Privacy Policy', 'Terms of Service', 'Data & IP Policy', 'Security', 'Compliance'] },
   ];
 
   const footerLinkUrls: Record<string, string | null> = {
-    'Explore Hub': '/hub',
-    'Scout Hub': '/scout',
-    'Pipeline': '/hub?tab=pipeline',
+    'Startup Hub': '/hub',
+    'Department Hub': '/scout',
+    'Challenges': '/hub?tab=pipeline',
     'Analytics': '/hub?tab=analytics',
-    'Brand Vault': '/hub?tab=vault',
+    'Solution Vault': '/hub?tab=vault',
     'About Us': null,
     'Careers': null,
     'Blog': null,
@@ -1240,7 +1240,7 @@ function Index() {
     'Changelog': null,
     'Privacy Policy': null,
     'Terms of Service': null,
-    'Cookie Policy': null,
+    'Data & IP Policy': null,
     'Security': null,
     'Compliance': null,
   };
@@ -1693,11 +1693,11 @@ function Index() {
       }}>
         <button type="button" onClick={() => navigateToSection(-1)} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'white', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
           <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#a78bfa', boxShadow: '0 0 12px 2px rgba(167,139,250,0.8)' }} />
-          Incutrack
+          Sanyog
         </button>
         {/* Desktop nav links */}
         <div className="lp-section-nav-links lp-nav-centered" style={{ display: 'flex', alignItems: 'center', gap: 32, fontSize: 13, color: 'rgba(163,163,163,1)' }}>
-          {([['Home', -1], ['Features', 0], ['Founders', 1], ['Investors', 2], ['Testimonials', 3], ['About', 4], ['Contact', 5]] as [string, number][]).map(([label, idx]) => (
+          {([['Home', -1], ['Features', 0], ['Startups', 1], ['Departments', 2], ['Outcomes', 3], ['About', 4], ['Contact', 5]] as [string, number][]).map(([label, idx]) => (
             <button
               key={label}
               onClick={() => { navigateToSection(idx); setMobileNavOpen(false); }}
@@ -1754,7 +1754,7 @@ function Index() {
         {/* Mobile dropdown */}
         {mobileNavOpen && (
           <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#04040c', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 26px 56px rgba(0,0,0,0.75)', padding: '8px 0', zIndex: 40, maxHeight: '82vh', overflowY: 'auto' }}>
-            {([['Home', -1], ['Features', 0], ['Founders', 1], ['Investors', 2], ['Testimonials', 3], ['About', 4], ['Contact', 5]] as [string, number][]).map(([label, idx]) => (
+            {([['Home', -1], ['Features', 0], ['Startups', 1], ['Departments', 2], ['Outcomes', 3], ['About', 4], ['Contact', 5]] as [string, number][]).map(([label, idx]) => (
               <button
                 key={label}
                 onClick={() => { navigateToSection(idx); setMobileNavOpen(false); }}
@@ -1800,14 +1800,16 @@ function Index() {
           <nav className="lp-hero-nav relative z-20 flex items-center justify-between px-6 md:px-16 py-7" style={{ flexWrap: 'nowrap' }}>
             <button type="button" onClick={() => navigateToSection(-1)} className="lp-hero-logo flex items-center gap-2.5 text-sm font-semibold tracking-widest uppercase" style={{ background: 'none', border: 'none', padding: 0, color: 'inherit', cursor: 'pointer' }}>
               <span className="inline-block h-2 w-2 rounded-full bg-violet-400 shadow-[0_0_12px_2px_rgba(167,139,250,0.8)]" />
-              Incutrack
+              Sanyog
             </button>
             <div className="flex items-center justify-center gap-8 text-neutral-400 lp-nav-centered" style={{ fontSize: 13 }}>
               {/* Desktop nav links */}
               <div className="hidden md:flex items-center gap-8">
                 <button onClick={() => navigateToSection(-1)} className="hover:text-white transition-colors cursor-pointer" style={{ background: 'none', border: 'none', padding: 0, color: 'inherit', fontSize: 'inherit', fontFamily: 'inherit' }}>Home</button>
-                {["features", "founders", "investors", "testimonials", "about", "contact"].map((l, i) => (
-                  <button key={l} onClick={() => navigateToSection(i)} className="hover:text-white transition-colors cursor-pointer capitalize" style={{ background: 'none', border: 'none', padding: 0, color: 'inherit', fontSize: 'inherit', fontFamily: 'inherit' }}>{l.charAt(0).toUpperCase() + l.slice(1)}</button>
+                {/* Section ids stay as-is (they anchor scroll targets); only the
+                    visible labels change to the department/startup vocabulary. */}
+                {([["features", "Features"], ["founders", "Startups"], ["investors", "Departments"], ["testimonials", "Outcomes"], ["about", "About"], ["contact", "Contact"]] as [string, string][]).map(([id, label], i) => (
+                  <button key={id} onClick={() => navigateToSection(i)} className="hover:text-white transition-colors cursor-pointer" style={{ background: 'none', border: 'none', padding: 0, color: 'inherit', fontSize: 'inherit', fontFamily: 'inherit' }}>{label}</button>
                 ))}
               </div>
               {/* Mobile-only Drusti pill — fills the otherwise-empty nav center on phones */}
@@ -1971,30 +1973,30 @@ function Index() {
             }}>
             <div ref={heroRef} className="px-6 sm:px-10 md:px-16 max-w-[580px] pointer-events-auto">
               <div data-dust="badge" className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-4 py-1.5 text-xs text-neutral-300 backdrop-blur mb-7" style={{ opacity: dustDone ? 1 : 0, transform: dustDone ? "translateY(0)" : "translateY(6px)", transition: "opacity 0.45s ease 0.05s,transform 0.45s ease 0.05s" }}>
-                <Sparkles className="h-3 w-3 text-violet-300" />Built for founders &amp; incubators
+                <Sparkles className="h-3 w-3 text-violet-300" />Built for departments &amp; startups
               </div>
-              <h1 data-dust="h1" className="text-[32px] sm:text-[48px] md:text-[68px] font-bold leading-[1.03] tracking-tight mb-6" style={{ fontSize: 'clamp(2rem, 7vw, 68px)', opacity: dustDone ? 1 : 0, transform: dustDone ? "translateY(0)" : "translateY(10px)", transition: "opacity 0.5s ease 0.12s,transform 0.5s ease 0.12s" }}>
-                <span className="bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-neutral-400">Build the next</span><br />
-                <span className="bg-gradient-to-r from-violet-400 via-sky-300 to-emerald-300 bg-clip-text text-transparent">billion-dollar</span><br />
-                <span className="bg-gradient-to-r from-sky-300 to-emerald-300 bg-clip-text text-transparent">idea.</span>
+              <h1 data-dust="h1" className="text-[26px] sm:text-[36px] md:text-[50px] font-bold leading-[1.06] tracking-tight mb-5" style={{ fontSize: 'clamp(1.7rem, 4.4vw, 50px)', opacity: dustDone ? 1 : 0, transform: dustDone ? "translateY(0)" : "translateY(10px)", transition: "opacity 0.5s ease 0.12s,transform 0.5s ease 0.12s" }}>
+                <span className="bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-neutral-400">From problem</span><br />
+                <span className="bg-gradient-to-r from-violet-400 via-sky-300 to-emerald-300 bg-clip-text text-transparent">to pilot</span><br />
+                <span className="bg-gradient-to-r from-sky-300 to-emerald-300 bg-clip-text text-transparent">to procurement.</span>
               </h1>
-              <p data-dust="para" className="text-neutral-400 text-sm sm:text-base md:text-lg leading-[1.75] max-w-md mb-9" style={{ fontSize: 'clamp(0.9rem, 3vw, 1.1rem)', opacity: dustDone ? 1 : 0, transform: dustDone ? "translateY(0)" : "translateY(8px)", transition: "opacity 0.45s ease 0.22s,transform 0.45s ease 0.22s" }}>
-                One platform where founders ship and incubators scale. Track traction, manage your pipeline, connect with capital — all backed by data, not vibes.
+              <p data-dust="para" className="text-neutral-400 text-[13px] sm:text-sm leading-[1.7] max-w-md mb-8" style={{ fontSize: 'clamp(0.8rem, 1.6vw, 0.9rem)', opacity: dustDone ? 1 : 0, transform: dustDone ? "translateY(0)" : "translateY(8px)", transition: "opacity 0.45s ease 0.22s,transform 0.45s ease 0.22s" }}>
+                Departments publish outcome-based challenges. Recognised startups apply without turnover or prior-experience barriers. Pilots run in a governed sandbox, pay out on verified milestones, and scale on evidence — not on a two-year tender.
               </p>
               <div className="lp-hero-btns flex items-center gap-4 flex-wrap" style={{ opacity: dustDone ? 1 : 0, transform: dustDone ? "translateY(0)" : "translateY(8px)", transition: "opacity 0.45s ease 0.30s,transform 0.45s ease 0.30s" }}>
                 <Link data-dust="btn1" to="/hub" preload="intent" className="inline-flex items-center justify-center gap-2.5 rounded-full bg-white text-black px-7 py-3.5 text-sm font-semibold hover:bg-neutral-100 transition-all shadow-[0_0_32px_rgba(255,255,255,0.1)] hover:shadow-[0_0_44px_rgba(255,255,255,0.18)]" style={{ minWidth: 160 }}>
-                  <Rocket className="h-4 w-4" />Explore Hub
+                  <Rocket className="h-4 w-4" />Startup Hub
                 </Link>
                 <a data-dust="btn2" href="/scout" className="inline-flex items-center justify-center gap-2.5 rounded-full border border-violet-500/50 bg-violet-500/10 text-violet-300 px-7 py-3.5 text-sm font-semibold backdrop-blur-sm hover:bg-violet-500/20 hover:border-violet-400/70 transition-all" style={{ minWidth: 160 }}>
-                  <Telescope className="h-4 w-4" />Scout Hub
+                  <Telescope className="h-4 w-4" />Department Hub
                 </a>
               </div>
               <div className="lp-stats-row mt-12 flex items-center gap-8 text-xs text-neutral-500" style={{ opacity: dustDone ? 1 : 0, transition: "opacity 0.45s ease 0.40s" }}>
-                <div><div data-dust="stat-num" className="text-white text-base font-semibold leading-tight">2.4k+</div><div data-dust="stat-label" className="mt-0.5">founders building</div></div>
+                <div><div data-dust="stat-num" className="text-white text-base font-semibold leading-tight">1,200+</div><div data-dust="stat-label" className="mt-0.5">recognised startups</div></div>
                 <div className="h-7 w-px bg-white/10" />
-                <div><div data-dust="stat-num" className="text-white text-base font-semibold leading-tight">$180M</div><div data-dust="stat-label" className="mt-0.5">tracked runway</div></div>
+                <div><div data-dust="stat-num" className="text-white text-base font-semibold leading-tight">16 weeks</div><div data-dust="stat-label" className="mt-0.5">challenge to pilot</div></div>
                 <div className="h-7 w-px bg-white/10" />
-                <div><div data-dust="stat-num" className="text-white text-base font-semibold leading-tight">38</div><div data-dust="stat-label" className="mt-0.5">ecosystems</div></div>
+                <div><div data-dust="stat-num" className="text-white text-base font-semibold leading-tight">26</div><div data-dust="stat-label" className="mt-0.5">departments</div></div>
               </div>
             </div>
             </div>
@@ -2027,22 +2029,22 @@ function Index() {
               <Layers style={{ width: 12, height: 12, color: "#a78bfa" }} />
               <span style={{ fontSize: 11, fontWeight: 700, color: "#a78bfa", letterSpacing: ".1em", textTransform: "uppercase" }}>Platform Overview</span>
             </div>
-            <h2 style={{ fontSize: isMobile ? 24 : 38, fontWeight: 900, letterSpacing: "-.02em", margin: "0 0 10px", background: "linear-gradient(180deg,white 40%,rgba(255,255,255,.38))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-              Everything your startup needs,<br />in one place
+            <h2 style={{ fontSize: isMobile ? 21 : 30, fontWeight: 800, letterSpacing: "-.02em", margin: "0 0 10px", background: "linear-gradient(180deg,white 40%,rgba(255,255,255,.38))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+              Eight stages,<br />one governed pathway
             </h2>
             <p style={{ fontSize: 14, color: "rgba(255,255,255,.4)", maxWidth: 500, margin: "0 auto", lineHeight: 1.5 }}>
-              From ideation to funded round — the operating system for the entire startup lifecycle.
+              From an unsolved departmental problem to a validated solution bought at scale — every step templated, scored and auditable.
             </p>
           </div>
 
           <div className="lp-features-grid" data-hscroll style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)", gap: 16 }}>
             {[
-              { Icon: GitBranch, color: "#8b5cf6", title: "Pipeline Management", desc: "Visualise your journey through every stage — Ideation to Funding Secured. Kanban-style with real-time updates." },
-              { Icon: BarChart3, color: "#06b6d4", title: "Growth Analytics", desc: "Track MRR, user acquisition, burn rate, and runway in one unified dashboard. Know where you stand before every investor meeting." },
-              { Icon: Users, color: "#10b981", title: "Mentor Network", desc: "Connect with seasoned operators, ex-founders, and VC partners. Book sessions and accelerate path to product-market fit." },
-              { Icon: Target, color: "#f59e0b", title: "Investor Matching", desc: "Smart deal flow between startups and VCs. Scout Hub lets investors shortlist, conduct diligence, and track deployments." },
-              { Icon: Shield, color: "#f472b6", title: "Secure Pitch Vault", desc: "End-to-end encrypted document sharing. Control who sees your pitch deck, financial projections, and cap table." },
-              { Icon: Globe, color: "#34d399", title: "Event Arena", desc: "Demo Days, hackathons, workshops — discover, RSVP, and track all ecosystem events in a single calendar." },
+              { Icon: GitBranch, color: "#8b5cf6", title: "Challenge Banking", desc: "A department turns a vague operational pain point into an outcome-based statement — baseline, target metric, sandbox parameters and pilot budget — from one standard template." },
+              { Icon: Target, color: "#06b6d4", title: "Eligibility Screening", desc: "Recognised startups are verified against the national registry. Prior-turnover and prior-experience conditions are waived; technical and quality criteria are not." },
+              { Icon: BarChart3, color: "#10b981", title: "Transparent Evaluation", desc: "Dual scoring — technical viability and innovation quotient — against a published rubric, by an independent subject-matter panel. Every score is recorded and auditable." },
+              { Icon: Shield, color: "#f59e0b", title: "Governed Sandbox", desc: "A bounded live environment agreed before day one: anonymised data, defined scope, security clearance, IP retained by the startup, and a fixed exit date." },
+              { Icon: TrendingUp, color: "#f472b6", title: "Milestone Payments", desc: "Tranches released against verified performance, not paperwork cycles — so a government pilot never turns into a cash-flow crisis for a small team." },
+              { Icon: Globe, color: "#34d399", title: "Validated Scale-Up", desc: "An independent audit measures the pilot against its baseline, opening a compliant route to deploy across districts without restarting a multi-year tender." },
             ].map(({ Icon, color, title, desc }) => (
               <div key={title} className="lp-card-hover" style={{ borderRadius: 18, border: `1px solid ${color}18`, background: `linear-gradient(145deg,${color}07 0%,rgba(5,5,12,0.9) 100%)`, padding: "16px 18px", cursor: "default", position: "relative", overflow: "hidden" }}>
                 <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: `linear-gradient(90deg,transparent,${color}60,transparent)` }} />
@@ -2086,22 +2088,22 @@ function Index() {
             <div className="lp-founders-intro" style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 28 }}>
               <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 18px", borderRadius: 999, background: "rgba(139,92,246,.1)", border: "1px solid rgba(139,92,246,.25)" }}>
                 <Rocket style={{ width: 12, height: 12, color: "#a78bfa" }} />
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#a78bfa", letterSpacing: ".1em", textTransform: "uppercase" }}>For Founders</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#a78bfa", letterSpacing: ".1em", textTransform: "uppercase" }}>For Startups</span>
               </div>
-              <h2 style={{ fontSize: isMobile ? 28 : 42, fontWeight: 900, letterSpacing: "-.02em", margin: 0, lineHeight: 1.1 }}>
-                <span style={{ background: "linear-gradient(135deg,white 40%,rgba(255,255,255,.5))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Stop managing chaos.</span><br />
-                <span style={{ background: "linear-gradient(135deg,#a78bfa,#67e8f9)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Start building momentum.</span>
+              <h2 style={{ fontSize: isMobile ? 23 : 32, fontWeight: 800, letterSpacing: "-.02em", margin: 0, lineHeight: 1.1 }}>
+                <span style={{ background: "linear-gradient(135deg,white 40%,rgba(255,255,255,.5))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Skip the tender maze.</span><br />
+                <span style={{ background: "linear-gradient(135deg,#a78bfa,#67e8f9)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Win the pilot on merit.</span>
               </h2>
               <p className="lp-founders-desc" style={{ fontSize: 15, color: "rgba(255,255,255,.45)", lineHeight: 1.75, margin: 0 }}>
-                A single command centre to track every metric that matters — from early validation signals to Series A readiness indicators. Know your numbers. Own your narrative.
+                Government demand, made visible. See live departmental challenges, apply against a published rubric instead of a relationship, and know exactly what you must prove — and when you get paid — before you commit a single engineer.
               </p>
               <div className="lp-founders-checklist" style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%" }}>
                 {[
-                  ["Real-time MRR and growth tracking", "#10b981"],
-                  ["Automated investor-ready reports", "#06b6d4"],
-                  ["IncuScore™ — AI-powered pitch readiness", "#8b5cf6"],
-                  ["Mentor bookings and session history", "#f59e0b"],
-                  ["Document vault with investor access control", "#f472b6"],
+                  ["Recognition auto-verified — no turnover proof", "#10b981"],
+                  ["Prior-experience criteria waived by policy", "#06b6d4"],
+                  ["FitScore™ — scored against the live challenge", "#8b5cf6"],
+                  ["You keep your IP; the department gets a licence", "#f59e0b"],
+                  ["Milestone payments released on verified delivery", "#f472b6"],
                 ].map(([text, color]) => (
                   <div key={text} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <CheckCircle style={{ width: 15, height: 15, color, flexShrink: 0 }} />
@@ -2110,7 +2112,7 @@ function Index() {
                 ))}
               </div>
               <Link to="/hub" preload="intent" className="lp-btn" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 28px", borderRadius: 999, background: "linear-gradient(90deg,#7c3aed,#0ea5e9)", color: "white", textDecoration: "none", fontSize: 14, fontWeight: 700, boxShadow: "0 4px 24px rgba(124,58,237,.35)" }}>
-                Explore the Hub <ArrowRight style={{ width: 14, height: 14 }} />
+                Open Startup Hub <ArrowRight style={{ width: 14, height: 14 }} />
               </Link>
             </div>
 
@@ -2121,9 +2123,9 @@ function Index() {
                   <PersonAvatar initials="AP" gradient="linear-gradient(135deg,#4c1d95,#7c3aed,#a78bfa)" ringColor="#8b5cf6" size={isMobile ? 48 : 80} />
                   <div>
                     <p style={{ fontSize: 18, fontWeight: 800, color: "white", margin: "0 0 3px" }}>Ashutosh Palai</p>
-                    <p style={{ fontSize: 13, color: "#a78bfa", margin: "0 0 8px", fontWeight: 600 }}>Founder & CEO · EduSphere</p>
+                    <p style={{ fontSize: 13, color: "#a78bfa", margin: "0 0 8px", fontWeight: 600 }}>Founder · JalRakshak Systems</p>
                     <div style={{ display: "flex", gap: 5 }}>
-                      {["SaaS", "EdTech", "Series A"].map(t => (
+                      {["Water Tech", "IoT", "Pilot Complete"].map(t => (
                         <span key={t} style={{ fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 999, background: "rgba(139,92,246,.12)", color: "#a78bfa", border: "1px solid rgba(139,92,246,.25)" }}>{t}</span>
                       ))}
                     </div>
@@ -2131,14 +2133,14 @@ function Index() {
                 </div>
                 <blockquote style={{ margin: 0, padding: isMobile ? "10px 14px" : "14px 18px", borderRadius: 12, background: "rgba(139,92,246,.06)", border: "1px solid rgba(139,92,246,.18)", borderLeft: "2px solid rgba(139,92,246,.6)" }}>
                   <p style={{ fontSize: isMobile ? 11.5 : 13.5, color: "rgba(255,255,255,.65)", lineHeight: isMobile ? 1.45 : 1.7, margin: isMobile ? "0 0 6px" : "0 0 10px", fontStyle: "italic" }}>
-                    "Before Incutrack, I was drowning in spreadsheets and investor emails. Now I walk into every meeting knowing exactly where my startup stands. We closed our seed round 3 months faster than expected."
+                    "We had bid twice before and been knocked out on the turnover clause — nobody ever read the technology. Here the rubric was published before we applied, and we were scored on one thing: whether we actually found the leaks."
                   </p>
                   <div style={{ display: "flex", gap: 3 }}>
                     {[1, 2, 3, 4, 5].map(i => <Star key={i} style={{ width: 11, height: 11, color: "#f59e0b", fill: "#f59e0b" }} />)}
                   </div>
                 </blockquote>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: isMobile ? 8 : 10, marginTop: isMobile ? 6 : 18 }}>
-                  {[["₹1.2Cr", "MRR"], ["+180%", "Growth"], ["92", "IncuScore™"]].map(([val, label]) => (
+                  {[["₹15L", "Pilot Value"], ["−34%", "Water Loss"], ["87", "FitScore™"]].map(([val, label]) => (
                     <div key={label} style={{ textAlign: "center", padding: isMobile ? "7px 0" : "10px 0", borderRadius: 10, background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.06)" }}>
                       <p style={{ fontSize: isMobile ? 15 : 17, fontWeight: 900, color: "white", margin: 0 }}>{val}</p>
                       <p style={{ fontSize: 9, color: "rgba(255,255,255,.3)", margin: "3px 0 0", textTransform: "uppercase", letterSpacing: ".06em" }}>{label}</p>
@@ -2151,9 +2153,9 @@ function Index() {
                   <PersonAvatar initials="KS" gradient="linear-gradient(135deg,#0e4f6b,#0e7490,#22d3ee)" ringColor="#06b6d4" size={56} />
                   <div style={{ flex: 1 }}>
                     <p style={{ fontSize: 14, fontWeight: 700, color: "white", margin: "0 0 2px" }}>Kabir Sen</p>
-                    <p style={{ fontSize: 11, color: "#22d3ee", margin: "0 0 6px" }}>CEO · NeuralKit · Growth Stage</p>
+                    <p style={{ fontSize: 11, color: "#22d3ee", margin: "0 0 6px" }}>Founder · TransitIQ · Pilot in progress</p>
                     <p style={{ fontSize: 12.5, color: "rgba(255,255,255,.45)", lineHeight: 1.6, margin: 0, fontStyle: "italic" }}>
-                      "The pipeline visualisation alone saved us 10 hours a week. It's like having a co-founder who never sleeps."
+                      "Knowing the second tranche date before we signed is what let us staff the pilot properly. Cash flow stopped being the risk."
                     </p>
                   </div>
                 </div>
@@ -2171,7 +2173,10 @@ function Index() {
       </section>
       </div>
 
-      {/* ══ VC / INVESTOR POV ══ */}
+      {/* ══ GOVERNMENT DEPARTMENT POV ══ */}
+      {/* NOTE: the section id stays "investors" and the CSS classes stay
+          .lp-investors-* — they are wired to scroll anchors and styles.css.
+          Only the visible copy is department-facing. */}
       <div className="lp-fixed-section" style={{
         position: 'fixed',
         inset: 0,
@@ -2197,9 +2202,9 @@ function Index() {
                   <PersonAvatar initials="AM" gradient="linear-gradient(135deg,#0c4a6e,#0369a1,#38bdf8)" ringColor="#06b6d4" size={64} />
                   <div>
                     <p style={{ fontSize: 17, fontWeight: 800, color: "white", margin: "0 0 3px" }}>Aryan Mehta</p>
-                    <p style={{ fontSize: 12, color: "#22d3ee", margin: "0 0 7px", fontWeight: 600 }}>Partner · Nexus Ventures</p>
+                    <p style={{ fontSize: 12, color: "#22d3ee", margin: "0 0 7px", fontWeight: 600 }}>Nodal Officer · Urban Infrastructure</p>
                     <div style={{ display: "flex", gap: 5 }}>
-                      {["₹200Cr Mandate", "Seed", "Series A"].map(t => (
+                      {["₹2Cr Innovation Budget", "4 Challenges", "2 Scaled"].map(t => (
                         <span key={t} style={{ fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 999, background: "rgba(6,182,212,.1)", color: "#22d3ee", border: "1px solid rgba(6,182,212,.25)" }}>{t}</span>
                       ))}
                     </div>
@@ -2207,14 +2212,14 @@ function Index() {
                 </div>
                 <blockquote style={{ margin: 0, padding: "12px 16px", borderRadius: 10, background: "rgba(6,182,212,.06)", border: "1px solid rgba(6,182,212,.15)", borderLeft: "2px solid rgba(6,182,212,.6)" }}>
                   <p style={{ fontSize: 13, color: "rgba(255,255,255,.65)", lineHeight: 1.6, margin: "0 0 8px", fontStyle: "italic" }}>
-                    "Scout Hub transformed our deal flow. We're seeing 3x more qualified deals with half the manual effort. The diligence room and audit trail alone justify the switch."
+                    "The audit trail is what made this possible internally. Every score, every approval and every payment is on record — so I can defend choosing a two-year-old company to anyone who asks."
                   </p>
                   <div style={{ display: "flex", gap: 3 }}>
                     {[1, 2, 3, 4, 5].map(i => <Star key={i} style={{ width: 10, height: 10, color: "#f59e0b", fill: "#f59e0b" }} />)}
                   </div>
                 </blockquote>
                 <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr 1fr", gap: 8, marginTop: 12 }}>
-                  {[["14", "Deals Tracked"], ["+40%", "Sourced Yield"], ["95%", "Speed"]].map(([val, label]) => (
+                  {[["14", "Applicants"], ["6", "Piloted"], ["2", "Scaled"]].map(([val, label]) => (
                     <div key={label} style={{ textAlign: "center", padding: "8px 0", borderRadius: 8, background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.06)" }}>
                       <p style={{ fontSize: 16, fontWeight: 900, color: "white", margin: 0 }}>{val}</p>
                       <p style={{ fontSize: 9, color: "rgba(255,255,255,.3)", margin: "2px 0 0", textTransform: "uppercase", letterSpacing: ".06em" }}>{label}</p>
@@ -2228,9 +2233,9 @@ function Index() {
                   <PersonAvatar initials="PS" gradient="linear-gradient(135deg,#052e16,#065f46,#34d399)" ringColor="#10b981" size={52} />
                   <div style={{ flex: 1 }}>
                     <p style={{ fontSize: 13.5, fontWeight: 700, color: "white", margin: "0 0 2px" }}>Priya Sharma</p>
-                    <p style={{ fontSize: 11, color: "#34d399", margin: "0 0 5px" }}>Partner · Sequoia India</p>
+                    <p style={{ fontSize: 11, color: "#34d399", margin: "0 0 5px" }}>Deputy Secretary · Innovation Cell</p>
                     <p style={{ fontSize: 12, color: "rgba(255,255,255,.45)", lineHeight: 1.55, margin: 0, fontStyle: "italic" }}>
-                      "I've cut my diligence time by 60% and discovered three companies I would have missed otherwise."
+                      "We stopped writing specifications for products we didn't understand, and started publishing the outcome we needed. The market answered."
                     </p>
                   </div>
                 </div>
@@ -2240,21 +2245,21 @@ function Index() {
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 18px", borderRadius: 999, background: "rgba(6,182,212,.1)", border: "1px solid rgba(6,182,212,.25)" }}>
                 <Telescope style={{ width: 12, height: 12, color: "#22d3ee" }} />
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#22d3ee", letterSpacing: ".1em", textTransform: "uppercase" }}>For Investors</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#22d3ee", letterSpacing: ".1em", textTransform: "uppercase" }}>For Departments</span>
               </div>
-              <h2 style={{ fontSize: 36, fontWeight: 900, letterSpacing: "-.02em", margin: 0, lineHeight: 1.1 }}>
-                <span style={{ background: "linear-gradient(135deg,white 40%,rgba(255,255,255,.5))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Scout smarter.</span><br />
-                <span style={{ background: "linear-gradient(135deg,#22d3ee,#34d399)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Deploy with conviction.</span>
+              <h2 style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-.02em", margin: 0, lineHeight: 1.15 }}>
+                <span style={{ background: "linear-gradient(135deg,white 40%,rgba(255,255,255,.5))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Solve it in a quarter.</span><br />
+                <span style={{ background: "linear-gradient(135deg,#22d3ee,#34d399)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Not a tender cycle.</span>
               </h2>
               <p style={{ fontSize: 14, color: "rgba(255,255,255,.45)", lineHeight: 1.65, margin: 0 }}>
-                Scout Hub is the VC-grade deal intelligence layer. From first scan to term sheet, every step is tracked, audited, and accelerated.
+                Department Hub is the governed workspace for innovation procurement. Publish an outcome, screen verified startups against a rubric, run the pilot inside a sandbox, and carry the evidence straight into a compliant purchase — with every decision on record.
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {[
-                  { Icon: Target, color: "#8b5cf6", title: "Investment Cockpit", desc: "Capital mandate, dry powder, capital deployed via Incutrack and shortlisted startups at a glance." },
-                  { Icon: GitBranch, color: "#06b6d4", title: "Deal Flow Kanban", desc: "Track every deal across all stages with sector filtering and scoring." },
-                  { Icon: Shield, color: "#10b981", title: "Diligence Room", desc: "Encrypted vault with view tracking and audit log." },
-                  { Icon: PieChart, color: "#f59e0b", title: "Market Insights", desc: "Sector momentum, sourced-deal yield, thesis match and score distribution." },
+                  { Icon: Target, color: "#8b5cf6", title: "Procurement Cockpit", desc: "Innovation budget, committed spend, live pilots and shortlisted solutions at a glance." },
+                  { Icon: GitBranch, color: "#06b6d4", title: "Challenge Pipeline", desc: "Every applicant tracked from screening through evaluation to sandbox, with rubric scores." },
+                  { Icon: Shield, color: "#10b981", title: "Evaluation Room", desc: "Access-controlled review of confidential submissions, with security clearance and audit log." },
+                  { Icon: PieChart, color: "#f59e0b", title: "Outcome Insights", desc: "Sector momentum, pilot success rate, score distribution and scale-up readiness." },
                 ].map(({ Icon, color, title, desc }) => (
                   <div key={title} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "10px 12px", borderRadius: 10, background: `${color}07`, border: `1px solid ${color}15` }}>
                     <div style={{ width: 32, height: 32, borderRadius: 9, background: `${color}16`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -2268,7 +2273,7 @@ function Index() {
                 ))}
               </div>
               <a href="/scout" className="lp-btn" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 24px", borderRadius: 999, background: "linear-gradient(90deg,#0e7490,#059669)", color: "white", textDecoration: "none", fontSize: 13.5, fontWeight: 700, boxShadow: "0 4px 20px rgba(6,182,212,.3)", width: "fit-content" }}>
-                Open Scout Hub <ArrowRight style={{ width: 13, height: 13 }} />
+                Open Department Hub <ArrowRight style={{ width: 13, height: 13 }} />
               </a>
             </div>
 
@@ -2303,20 +2308,20 @@ function Index() {
           <div style={{ textAlign: "center", marginBottom: 52 }}>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 18px", borderRadius: 999, background: "rgba(245,158,11,.1)", border: "1px solid rgba(245,158,11,.25)", marginBottom: 16 }}>
               <MessageSquare style={{ width: 12, height: 12, color: "#fbbf24" }} />
-              <span style={{ fontSize: 11, fontWeight: 700, color: "#fbbf24", letterSpacing: ".1em", textTransform: "uppercase" }}>Testimonials</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: "#fbbf24", letterSpacing: ".1em", textTransform: "uppercase" }}>Outcomes</span>
             </div>
-            <h2 style={{ fontSize: isMobile ? 28 : 46, fontWeight: 900, letterSpacing: "-.02em", margin: 0, background: "linear-gradient(180deg,white 40%,rgba(255,255,255,.38))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-              Loved by builders &amp; backers
+            <h2 style={{ fontSize: isMobile ? 23 : 34, fontWeight: 800, letterSpacing: "-.02em", margin: 0, background: "linear-gradient(180deg,white 40%,rgba(255,255,255,.38))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+              Trusted on both sides of the table
             </h2>
           </div>
           <div className="lp-features-grid lp-mobile-carousel" data-hscroll style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)", gap: 16 }}>
             {[
-              { name: "Meera Iyer", role: "Founder · ClimateOS", initials: "MI", gradient: "linear-gradient(135deg,#064e3b,#065f46,#34d399)", ring: "#10b981", text: "IncuScore™ told us exactly what investors would push back on before we walked into the room. Fixed those gaps, raised ₹3Cr in 6 weeks.", rating: 5 },
-              { name: "Pawan Kumar", role: "CTO · QuantumGrid", initials: "PK", gradient: "linear-gradient(135deg,#0c4a6e,#0369a1,#38bdf8)", ring: "#06b6d4", text: "Our lead investor said it was the most professional due diligence process they'd ever seen from a seed-stage company.", rating: 5 },
-              { name: "Anjali Gupta", role: "Angel Investor · AJ Capital", initials: "AG", gradient: "linear-gradient(135deg,#4a1942,#7b2d72,#d946ef)", ring: "#d946ef", text: "Scout Hub gives me a 30-second read on any startup's quality. The score distribution and thesis alignment charts are exactly what I needed.", rating: 5 },
-              { name: "Ankit Raj Singh", role: "Co-Founder · FinFlow", initials: "AK", gradient: "linear-gradient(135deg,#1c1917,#44403c,#a8a29e)", ring: "#f59e0b", text: "We went from zero to fully structured in a weekend. The pipeline kanban made our monthly incubator reviews dramatically more focused.", rating: 5 },
-              { name: "Dev Patel", role: "YC Alumni · BuildFast", initials: "DP", gradient: "linear-gradient(135deg,#3b0764,#6d28d9,#a78bfa)", ring: "#8b5cf6", text: "Incutrack actually does it. The analytics are honest — it shows you the uncomfortable truths that make you a better pitch.", rating: 5 },
-              { name: "Chetan Sharma", role: "Founder · BioWeave", initials: "CS", gradient: "linear-gradient(135deg,#1a2e05,#365314,#84cc16)", ring: "#84cc16", text: "Incutrack's event arena connected me with the right mentors at exactly the right stage. Can't imagine building without it.", rating: 5 },
+              { name: "Meera Iyer", role: "Founder · AirSense", initials: "MI", gradient: "linear-gradient(135deg,#064e3b,#065f46,#34d399)", ring: "#10b981", text: "FitScore™ showed us exactly which part of the rubric we were weak on before we submitted. We closed the security-clearance gap and cleared evaluation on the next cycle.", rating: 5 },
+              { name: "Pawan Kumar", role: "CTO · GridSense", initials: "PK", gradient: "linear-gradient(135deg,#0c4a6e,#0369a1,#38bdf8)", ring: "#06b6d4", text: "The sandbox agreement was already drafted — IP terms, data scope, liability cap. We signed in nine days instead of negotiating for four months.", rating: 5 },
+              { name: "Anjali Gupta", role: "Joint Director · Transport", initials: "AG", gradient: "linear-gradient(135deg,#4a1942,#7b2d72,#d946ef)", ring: "#d946ef", text: "I can see every applicant's score, who awarded it and on what criterion. That record is what lets me sign off without fearing an audit query two years later.", rating: 5 },
+              { name: "Ankit Raj Singh", role: "Co-Founder · CivicLens", initials: "AK", gradient: "linear-gradient(135deg,#1c1917,#44403c,#a8a29e)", ring: "#f59e0b", text: "Three government pilots before this, three payment nightmares. This is the first one where the tranche released the same week the milestone was verified.", rating: 5 },
+              { name: "Dev Patel", role: "Founder · CivicStack", initials: "DP", gradient: "linear-gradient(135deg,#3b0764,#6d28d9,#a78bfa)", ring: "#8b5cf6", text: "The challenge statement gave us the baseline, the target metric and the budget on day one. We knew whether we could win before spending a rupee on the bid.", rating: 5 },
+              { name: "Chetan Sharma", role: "Under Secretary · Rural Dev.", initials: "CS", gradient: "linear-gradient(135deg,#1a2e05,#365314,#84cc16)", ring: "#84cc16", text: "The independent validation report is what convinced our finance wing. It wasn't the vendor's claim — it was a third party measuring against our own baseline.", rating: 5 },
             ].map((t) => (
               <div key={t.name} className="lp-card-hover" style={{ borderRadius: 18, border: `1px solid ${t.ring}35`, background: `linear-gradient(145deg,${t.ring}12 0%,rgba(8,8,20,0.85) 100%)`, padding: "20px", position: "relative", overflow: "hidden", backdropFilter: "blur(12px)", boxShadow: `0 8px 32px ${t.ring}18, inset 0 1px 0 rgba(255,255,255,0.06)` }}>
                 <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: `linear-gradient(90deg,transparent,${t.ring}80,transparent)` }} />
@@ -2375,17 +2380,17 @@ function Index() {
             <div style={{ animation: "ab-in .6s ease both" }}>
               <div style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "5px 16px", borderRadius: 999, background: "rgba(139,92,246,.08)", border: "1px solid rgba(139,92,246,.2)", marginBottom: isMobile ? 12 : 22 }}>
                 <Award style={{ width: 11, height: 11, color: "#a78bfa" }} />
-                <span style={{ fontSize: 10, fontWeight: 700, color: "#a78bfa", letterSpacing: ".12em", textTransform: "uppercase" }}>About Incutrack</span>
+                <span style={{ fontSize: 10, fontWeight: 700, color: "#a78bfa", letterSpacing: ".12em", textTransform: "uppercase" }}>About Sanyog</span>
               </div>
 
-              <h2 style={{ fontSize: isMobile ? 24 : 42, fontWeight: 900, letterSpacing: "-.025em", margin: isMobile ? "0 0 12px" : "0 0 22px", lineHeight: 1.12, background: "linear-gradient(150deg,#fff 30%,rgba(255,255,255,.4))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                Built for the next generation of companies.
+              <h2 style={{ fontSize: isMobile ? 21 : 32, fontWeight: 800, letterSpacing: "-.025em", margin: isMobile ? "0 0 12px" : "0 0 22px", lineHeight: 1.12, background: "linear-gradient(150deg,#fff 30%,rgba(255,255,255,.4))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                Built so good ideas can reach public problems.
               </h2>
 
               <p style={{ fontSize: isMobile ? 13 : 15, color: "rgba(255,255,255,.38)", lineHeight: isMobile ? 1.55 : 1.85, margin: isMobile ? "0 0 12px" : "0 0 28px", maxWidth: 440 }}>
                 {isMobile
-                  ? "Founders drowned in spreadsheets; investors missed great deals — so we built the platform both sides wished existed."
-                  : "We watched founders drown in spreadsheets and investors miss great deals in broken workflows — so we built the platform both sides wished existed."}
+                  ? "Departments couldn't buy innovation; startups couldn't get in the door — so we built the pathway between them."
+                  : "Departments had problems they couldn't write a specification for, and startups had answers they couldn't legally sell. Procurement rules built for standard goods sat in between — so we built the pathway that connects the two."}
               </p>
 
               {/* Divider rule */}
@@ -2402,10 +2407,10 @@ function Index() {
             <div style={{ animation: "ab-in .6s .12s ease both" }}>
               <div className="ab-principle-grid" data-hscroll style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 {([
-                  { Icon: Zap,        color: "#f59e0b", title: "Speed‑first",      desc: "Saves founders real time." },
-                  { Icon: Shield,     color: "#10b981", title: "Privacy by design", desc: "End-to-end encrypted." },
-                  { Icon: Globe,      color: "#06b6d4", title: "Ecosystem thinking",desc: "Founders, VCs & mentors, one network." },
-                  { Icon: TrendingUp, color: "#8b5cf6", title: "Honest metrics",    desc: "Metrics that predict success." },
+                  { Icon: Zap,        color: "#f59e0b", title: "Outcome‑first",      desc: "Buy the result, not the specification." },
+                  { Icon: Shield,     color: "#10b981", title: "Auditable by default", desc: "Every score and approval on record." },
+                  { Icon: Globe,      color: "#06b6d4", title: "Both sides served",  desc: "Departments and startups, one pathway." },
+                  { Icon: TrendingUp, color: "#8b5cf6", title: "Evidence over opinion", desc: "Scale only what was independently measured." },
                 ] as { Icon: any; color: string; title: string; desc: string }[]).map(({ Icon, color, title, desc }) => (
                   <div key={title} className="ab-principle" style={{ padding: "20px 18px", borderRadius: 16, background: `linear-gradient(145deg,${color}0c,rgba(4,4,14,0.9))`, border: `1px solid ${color}20`, backdropFilter: "blur(12px)", position: "relative", overflow: "hidden" }}>
                     <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: `linear-gradient(90deg,transparent,${color}55,transparent)` }} />
@@ -2430,15 +2435,15 @@ function Index() {
           <div>
             <div className="ab-stats-grid" data-hscroll style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)", gap: 14 }}>
               {([
-                { value: "2026",   label: "Founded",    sub: "IIT KGP · Kharagpur", color: "#a78bfa", ringColor: "#7c3aed" },
-                { value: "2,400+", label: "Founders",   sub: "actively building",    color: "#22d3ee", ringColor: "#0891b2" },
-                { value: "38",     label: "Ecosystems", sub: "across 12 countries",  color: "#34d399", ringColor: "#059669" },
+                { value: "2026",   label: "Founded",     sub: "IIT KGP · Kharagpur",   color: "#a78bfa", ringColor: "#7c3aed" },
+                { value: "1,200+", label: "Startups",    sub: "recognised & verified", color: "#22d3ee", ringColor: "#0891b2" },
+                { value: "26",     label: "Departments", sub: "publishing challenges", color: "#34d399", ringColor: "#059669" },
               ] as { value: string; label: string; sub: string; color: string; ringColor: string }[]).map(({ value, label, sub, color, ringColor }) => (
                 <div key={label} className="ab-stat" style={{ padding: "22px 24px", borderRadius: 18, background: `linear-gradient(145deg,${color}0e,rgba(4,4,14,0.95))`, border: `1px solid ${color}28`, backdropFilter: "blur(16px)", boxShadow: `0 8px 36px ${color}12, inset 0 1px 0 ${color}22`, position: "relative", overflow: "hidden", boxSizing: "border-box" }}>
                   <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: `linear-gradient(90deg,transparent,${color}80,transparent)` }} />
                   <div style={{ position: "absolute", bottom: 0, right: 0, width: 120, height: 120, background: `radial-gradient(circle at bottom right,${color}0e,transparent 70%)`, pointerEvents: "none" }} />
                   <MiniPlanetCanvas color={color} ringColor={ringColor} size={26} />
-                  <p style={{ fontSize: 36, fontWeight: 900, margin: "14px 0 2px", lineHeight: 1, letterSpacing: "-.03em", background: `linear-gradient(135deg,#fff 30%,${color})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{value}</p>
+                  <p style={{ fontSize: 28, fontWeight: 800, margin: "14px 0 2px", lineHeight: 1, letterSpacing: "-.03em", background: `linear-gradient(135deg,#fff 30%,${color})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{value}</p>
                   <p style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,.75)", margin: "0 0 3px" }}>{label}</p>
                   <p style={{ fontSize: 11, color, margin: 0, fontWeight: 500, opacity: .8, letterSpacing: ".02em" }}>{sub}</p>
                 </div>
@@ -2479,11 +2484,11 @@ function Index() {
               <Mail style={{ width: 12, height: 12, color: "#22d3ee" }} />
               <span style={{ fontSize: 11, fontWeight: 700, color: "#22d3ee", letterSpacing: ".1em", textTransform: "uppercase" }}>Get in Touch</span>
             </div>
-            <h2 style={{ fontSize: isMobile ? 24 : 34, fontWeight: 900, letterSpacing: "-.02em", margin: "0 0 8px", background: "linear-gradient(180deg,white 40%,rgba(255,255,255,.38))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-              Let's build something great
+            <h2 style={{ fontSize: isMobile ? 21 : 27, fontWeight: 800, letterSpacing: "-.02em", margin: "0 0 8px", background: "linear-gradient(180deg,white 40%,rgba(255,255,255,.38))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+              Let's solve something real
             </h2>
             <p style={{ fontSize: 13, color: "rgba(255,255,255,.38)", maxWidth: 460, margin: "0 auto" }}>
-              Whether you're a founder looking to get listed, an incubator wanting to onboard your cohort, or a VC ready to explore Scout Hub — reach out.
+              Whether you're a department with a problem worth solving, a startup ready to pilot, or an institution that can independently validate results — reach out.
             </p>
           </div>
 
@@ -2498,7 +2503,7 @@ function Index() {
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                  {[{ id: "name", label: "Your Name", placeholder: "Ashutosh Palai", type: "text" }, { id: "email", label: "Email Address", placeholder: "hello@yourstartup.com", type: "email" }].map(f => (
+                  {[{ id: "name", label: "Your Name", placeholder: "Ashutosh Palai", type: "text" }, { id: "email", label: "Email Address", placeholder: "you@organisation.in", type: "email" }].map(f => (
                     <div key={f.id}>
                       <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,.3)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 6 }}>{f.label}</label>
                       <input
@@ -2514,7 +2519,7 @@ function Index() {
                   <div>
                     <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,.3)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 6 }}>Message</label>
                     <textarea
-                      rows={2} placeholder="Tell us about your startup or what you're looking for..."
+                      rows={2} placeholder="Tell us about the problem you need solved, or the solution you've built..."
                       value={contactForm.message}
                       onChange={e => setContactForm(p => ({ ...p, message: e.target.value }))}
                       style={{ width: "100%", padding: "10px 13px", borderRadius: 10, background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.09)", color: "white", fontSize: 14, outline: "none", resize: "vertical", fontFamily: "inherit", boxSizing: "border-box", transition: "border-color .18s" }}
@@ -2556,7 +2561,7 @@ function Index() {
                 </p>
               </div>
               {[
-                { Icon: Mail, color: "#06b6d4", label: "Email", value: "hello@incutrack.in" },
+                { Icon: Mail, color: "#06b6d4", label: "Email", value: "hello@sanyog.in" },
                 { Icon: Phone, color: "#10b981", label: "Phone", value: "+91 93481 53073" },
                 { Icon: MapPin, color: "#8b5cf6", label: "Location", value: "IIT KGP Innovation Cell · Kharagpur, West Bengal" },
                 { Icon: Globe, color: "#f59e0b", label: "Website", value: "incutrack.ashutosh-palai2005.workers.dev" },
@@ -2574,13 +2579,13 @@ function Index() {
               <div style={{ marginTop: 0, padding: "14px 18px", borderRadius: 16, background: "linear-gradient(135deg,rgba(139,92,246,.12),rgba(6,182,212,.08))", border: "1px solid rgba(139,92,246,.22)", position: "relative", overflow: "hidden" }}>
                 <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: "linear-gradient(90deg,#7c3aed,#06b6d4)" }} />
                 <p style={{ fontSize: 13.5, fontWeight: 700, color: "white", margin: "0 0 4px" }}>Ready to get started?</p>
-                <p style={{ fontSize: 11.5, color: "rgba(255,255,255,.4)", margin: "0 0 10px", lineHeight: 1.5 }}>Join 2,400+ founders already building on Incutrack. Free to get started.</p>
+                <p style={{ fontSize: 11.5, color: "rgba(255,255,255,.4)", margin: "0 0 10px", lineHeight: 1.5 }}>Departments publish a challenge. Startups apply in minutes. Free to get started.</p>
                 <div style={{ display: "flex", gap: 8 }}>
                   <Link to="/hub" preload="intent" className="lp-btn" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, padding: "9px 0", borderRadius: 9, background: "linear-gradient(90deg,#7c3aed,#0ea5e9)", color: "white", textDecoration: "none", fontSize: 12.5, fontWeight: 700 }}>
-                    <Rocket style={{ width: 11, height: 11 }} />Explore Hub
+                    <Rocket style={{ width: 11, height: 11 }} />Startup Hub
                   </Link>
                   <a href="/scout" className="lp-btn" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, padding: "9px 0", borderRadius: 9, background: "rgba(6,182,212,.12)", border: "1px solid rgba(6,182,212,.3)", color: "#22d3ee", textDecoration: "none", fontSize: 12.5, fontWeight: 700 }}>
-                    <Telescope style={{ width: 11, height: 11 }} />Scout Hub
+                    <Telescope style={{ width: 11, height: 11 }} />Department Hub
                   </a>
                 </div>
               </div>
@@ -2615,10 +2620,10 @@ function Index() {
             {/* brand */}
             <div>
               <p style={{ fontSize: 13.5, color: "rgba(255,255,255,.32)", lineHeight: 1.75, maxWidth: 260, margin: "0 0 18px" }}>
-                The operating system for startup ecosystems. Built for founders who move fast and investors who think deep.
+                A compliant pathway from public problem to procured solution. Built for departments that need outcomes and startups that can deliver them.
               </p>
               <div style={{ display: "flex", gap: 6 }}>
-                {["SaaS", "FinTech", "DeepTech"].map(t => (
+                {["GovTech", "Urban", "AgriTech"].map(t => (
                   <span key={t} style={{ fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 999, background: "rgba(139,92,246,.1)", color: "#a78bfa", border: "1px solid rgba(139,92,246,.2)" }}>{t}</span>
                 ))}
               </div>
@@ -2650,7 +2655,7 @@ function Index() {
 
           {/* footer bottom bar */}
           <div style={{ borderTop: "1px solid rgba(255,255,255,.05)", paddingTop: 24, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <p style={{ fontSize: 12.5, color: "rgba(255,255,255,.2)", margin: 0 }}>© 2026 Incutrack. All rights reserved. Built with ♦ at IIT KGP Innovation Cell.</p>
+            <p style={{ fontSize: 12.5, color: "rgba(255,255,255,.2)", margin: 0 }}>© 2026 Sanyog. All rights reserved. Built with ♦ at IIT KGP Innovation Cell.</p>
             <div style={{ display: "flex", gap: 5 }}>
               {["#8b5cf6", "#06b6d4", "#10b981", "#f59e0b"].map((c, i) => (
                 <div key={i} style={{ width: 5, height: 5, borderRadius: "50%", background: c, opacity: 0.6 }} />

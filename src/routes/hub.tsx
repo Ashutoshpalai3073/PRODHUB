@@ -16,27 +16,33 @@ import {
 
 export const Route = createFileRoute('/hub')({
   component: HubPage,
-  head: () => ({ meta: [{ title: 'Incutrack — Hub' }] }),
+  head: () => ({ meta: [{ title: 'Sanyog — Startup Hub' }] }),
 });
 
 // ─── Extended data ────────────────────────────────────────────────────────────
 const EXTENDED_STARTUPS = [
   ...initialStartups,
-  { id: 'st-5', name: 'ClimateOS', tagline: 'Carbon accounting for SMEs.', description: 'Automated Scope 1-3 emissions tracking with regulatory reporting for mid-market enterprises.', stage: 'Validation', industry: 'DeepTech', founder: 'Meera Iyer', fundingGoal: 20000000, raised: 3000000, metrics: { members: 3, pitchScore: 79 } },
-  { id: 'st-6', name: 'NeuralKit', tagline: 'No-code ML model builder.', description: 'Drag-and-drop to train, evaluate and deploy production ML without writing code.', stage: 'Growth', industry: 'SaaS', founder: 'Kabir Sen', fundingGoal: 40000000, raised: 28000000, metrics: { members: 7, pitchScore: 93 } },
+  { id: 'st-5', name: 'CivicLens', tagline: 'Road defect detection from municipal vehicle dashcams.', description: 'Dashcams already fitted to garbage trucks and water tankers survey road condition continuously; computer vision flags potholes and marks them on the ward GIS layer, replacing manual complaint-driven inspection.', stage: 'Screened', industry: 'Urban Infra', founder: 'Ankit Raj Singh', fundingGoal: 1500000, raised: 0, metrics: { members: 4, pitchScore: 74 } },
+  { id: 'st-6', name: 'GridSense', tagline: 'Distribution transformer health monitoring.', description: 'Retrofit sensors on distribution transformers predict failures from load and oil-temperature signatures, letting the utility replace units before an outage instead of after one.', stage: 'In Pilot', industry: 'Energy', founder: 'Pawan Kumar', fundingGoal: 2500000, raised: 750000, metrics: { members: 5, pitchScore: 83 } },
 ];
 
-const STAGE_ORDER = ['Ideation', 'Validation', 'MVP Built', 'Growth', 'Funding Secured'];
-const STAGE_COLORS = { Ideation: '#8b5cf6', Validation: '#06b6d4', 'MVP Built': '#f59e0b', Growth: '#10b981', 'Funding Secured': '#34d399' };
-const STAGE_DIM = { Ideation: 'rgba(139,92,246,.12)', Validation: 'rgba(6,182,212,.12)', 'MVP Built': 'rgba(245,158,11,.12)', Growth: 'rgba(16,185,129,.12)', 'Funding Secured': 'rgba(52,211,153,.12)' };
+// Procurement stages. These values are PERSISTED in `startups.stage` and in
+// startup_advance_requests.current_stage/target_stage — changing a label here
+// without running migration 018 will orphan existing rows from the kanban.
+const STAGE_ORDER = ['Applied', 'Screened', 'In Pilot', 'Validated', 'Scaled'];
+const STAGE_COLORS = { Applied: '#8b5cf6', Screened: '#06b6d4', 'In Pilot': '#f59e0b', Validated: '#10b981', Scaled: '#34d399' };
+const STAGE_DIM = { Applied: 'rgba(139,92,246,.12)', Screened: 'rgba(6,182,212,.12)', 'In Pilot': 'rgba(245,158,11,.12)', Validated: 'rgba(16,185,129,.12)', Scaled: 'rgba(52,211,153,.12)' };
 
+// Subject-matter experts who score submissions (Stage 3) and help applicants
+// become pilot-ready. Drawn from technical institutions, standards/audit bodies
+// and serving departments — not from investors.
 const MENTORS = [
-  { id: 'm1', name: 'Priya Sharma', role: 'Partner', company: 'Sequoia India', avatar: 'PS', tags: ['SaaS', 'GTM', 'Series A'], rating: 4.9, sessions: 47, avail: true, bio: 'Led 12 portfolio companies to Series B+. Specialises in B2B SaaS go-to-market in India.' },
-  { id: 'm2', name: 'Rahul Mehta', role: 'Ex-CTO', company: 'Zomato', avatar: 'RM', tags: ['Tech', 'Scale', 'Infra'], rating: 4.8, sessions: 32, avail: false, bio: 'Built Zomato engineering from 20→400. Expert in hyper-scale distributed systems.' },
-  { id: 'm3', name: 'Anjali Gupta', role: 'Angel Investor', company: 'AJ Capital', avatar: 'AG', tags: ['FinTech', 'Ops', 'Fundraising'], rating: 4.7, sessions: 28, avail: true, bio: '50+ angel investments. Former CFO at Razorpay. Expert in FinTech regulation & compliance.' },
-  { id: 'm4', name: 'Dev Patel', role: 'YC Alumni W21', company: 'BuildFast', avatar: 'DP', tags: ['SaaS', 'Product', 'PMF'], rating: 4.9, sessions: 61, avail: true, bio: 'Built and exited 2 companies. YC W21. Specialist in finding product-market fit fast.' },
-  { id: 'm5', name: 'Sneha Reddy', role: 'VC Principal', company: 'Nexus VP', avatar: 'SR', tags: ['DeepTech', 'AI/ML', 'Research'], rating: 4.8, sessions: 19, avail: false, bio: 'PhD CS. Evaluates deep-tech for Nexus VP. 8 portfolio exits.' },
-  { id: 'm6', name: 'Arjun Nair', role: 'Growth Lead', company: 'PhonePe', avatar: 'AN', tags: ['SaaS', 'Marketing', 'Retention'], rating: 4.6, sessions: 38, avail: true, bio: 'Grew PhonePe 5M→100M users. Expert in viral growth loops and retention engineering.' },
+  { id: 'm1', name: 'Dr. Priya Sharma', role: 'Professor, Civil & Water Resources', company: 'VJTI Mumbai', avatar: 'PS', tags: ['Water', 'Sensors', 'Evaluation'], rating: 4.9, sessions: 47, avail: true, bio: 'Evaluates water-infrastructure pilots for state utilities. Sets baseline and measurement protocols for non-revenue water studies.' },
+  { id: 'm2', name: 'Rahul Mehta', role: 'Lead Auditor', company: 'CERT-In empanelled auditor', avatar: 'RM', tags: ['Security', 'VAPT', 'Clearance'], rating: 4.8, sessions: 32, avail: false, bio: 'Runs pre-hosting security audits for government applications. Guides startups through clearance before a sandbox opens.' },
+  { id: 'm3', name: 'Anjali Gupta', role: 'Joint Director (Retd.)', company: 'Transport Department', avatar: 'AG', tags: ['Mobility', 'Procurement', 'Tendering'], rating: 4.7, sessions: 28, avail: true, bio: '28 years in state transport administration. Advises startups on how departmental evaluation and work-order processes actually run.' },
+  { id: 'm4', name: 'Dev Patel', role: 'Principal Consultant', company: 'STQC-empanelled test lab', avatar: 'DP', tags: ['Testing', 'SLA', 'Standards'], rating: 4.9, sessions: 61, avail: true, bio: 'Designs SLA measurement and functional test plans so pilot KPIs are objectively verifiable rather than self-reported.' },
+  { id: 'm5', name: 'Dr. Sneha Reddy', role: 'Associate Professor, AI & Public Systems', company: 'IIT Bombay', avatar: 'SR', tags: ['AI/ML', 'Validation', 'Research'], rating: 4.8, sessions: 19, avail: false, bio: 'Independent validator for AI-enabled public-service pilots. Specialises in counterfactual study design and baseline construction.' },
+  { id: 'm6', name: 'Arjun Nair', role: 'Data Protection Officer', company: 'State Data Centre', avatar: 'AN', tags: ['DPDP', 'Data', 'Governance'], rating: 4.6, sessions: 38, avail: true, bio: 'Advises on anonymisation, data-sharing agreements and DPDP Act obligations when citizen data enters a sandbox.' },
 ];
 const MENTOR_COLORS: Record<string, string> = {
   'm1': '#8b5cf6',
@@ -48,42 +54,47 @@ const MENTOR_COLORS: Record<string, string> = {
 };
 const BASE_EVENTS = [
   ...upcomingEvents,
-  { id: 'ev-3', title: 'AI & Deep Tech Product Workshop', date: 'July 8, 2026', time: '11:00 AM IST', type: 'Workshop', location: 'Sheraton Grand · Bengaluru', description: 'Hands-on workshop on building vs. buying AI: LLM integration, proprietary model training, and cost benchmarks. Live walkthroughs from Incutrack portfolio teams.' },
-  { id: 'ev-4', title: 'Bharat Startup Hackathon 2026', date: 'July 20, 2026', time: '09:00 AM IST', type: 'Hackathon', location: 'Bombay Exhibition Centre · Mumbai', description: '48-hour national hackathon open to all registered startups. ₹5L prize pool across three tracks: ClimaTech, FinTech, and Rural Infrastructure.' },
-  { id: 'ev-5', title: 'Sequoia India Founder Office Hours', date: 'August 3, 2026', time: '02:00 PM IST', type: 'Mentorship', location: 'ITC Gardenia · Bengaluru', description: 'One-on-one sessions with Priya Sharma, Partner at Sequoia India. Application-only. Priority given to startups at MVP stage and beyond seeking Series A readiness.' },
+  { id: 'ev-3', title: 'Sandbox Readiness Workshop', date: 'July 8, 2026', time: '11:00 AM IST', type: 'Workshop', location: 'MCCIA, Pune', description: 'What a department expects before it opens a sandbox: anonymisation and data-sharing protocol, CERT-In audit clearance, hosting constraints, and the security checklist that gates pilot start.' },
+  { id: 'ev-4', title: 'Maharashtra GovTech Hackathon 2026', date: 'July 20, 2026', time: '09:00 AM IST', type: 'Hackathon', location: 'Bombay Exhibition Centre · Mumbai', description: '48-hour hackathon on live departmental problem statements across water, mobility and rural service delivery. Winning teams enter the challenge pipeline directly at the Screened stage.' },
+  { id: 'ev-5', title: 'Nodal Officer Office Hours', date: 'August 3, 2026', time: '02:00 PM IST', type: 'Mentorship', location: 'Online · MS Teams', description: 'Open slots with nodal officers from participating departments. Ask what the baseline actually is, how the KPI will be measured, and who signs off — before you commit engineering time.' },
 ];
 
 const VAULT_DOCS = [
-  { name: 'NeuralKit_Public_Vault', type: 'Deck', date: 'Jun 12', views: 28, status: 'Final', score: 94, file_url: '', file_path: '' },
-  { name: 'FinFlow_Public_Vault', type: 'Doc', date: 'Jun 10', views: 14, status: 'Final', score: 88, file_url: '', file_path: '' },
-  { name: 'QuantumGrid_Public_Vault', type: 'Bundle', date: 'Jun 8', views: 9, status: 'Final', score: 96, file_url: '', file_path: '' },
-  { name: 'ClimateOS_Public_Vault', type: 'Video', date: 'Jun 5', views: 6, status: 'Review', score: 79, file_url: '', file_path: '' },
-  { name: 'EduSphere_Public_Vault', type: 'Sheet', date: 'Jun 1', views: 21, status: 'Final', score: 85, file_url: '', file_path: '' },
-  { name: 'BioWeave_Public_Vault', type: 'Sheet', date: 'May 28', views: 3, status: 'Draft', score: 71, file_url: '', file_path: '' },
+  { name: 'AarogyaTrack_Solution_Brief', type: 'Deck', date: 'Jun 12', views: 28, status: 'Final', score: 91, file_url: '', file_path: '' },
+  { name: 'TransitIQ_Technical_Spec', type: 'Doc', date: 'Jun 10', views: 14, status: 'Final', score: 78, file_url: '', file_path: '' },
+  { name: 'JalRakshak_Pilot_Bundle', type: 'Bundle', date: 'Jun 8', views: 9, status: 'Final', score: 87, file_url: '', file_path: '' },
+  { name: 'GridSense_Field_Demo', type: 'Video', date: 'Jun 5', views: 6, status: 'Review', score: 83, file_url: '', file_path: '' },
+  { name: 'CivicLens_Costing_Sheet', type: 'Sheet', date: 'Jun 1', views: 21, status: 'Final', score: 74, file_url: '', file_path: '' },
+  { name: 'FasalSetu_Compliance_Sheet', type: 'Sheet', date: 'May 28', views: 3, status: 'Draft', score: 69, file_url: '', file_path: '' },
 ];
 
+// Departments and the pilot budget they have committed against live challenges.
+// `status` values must stay in sync with STATUS_COLOR below.
 const INVESTORS = [
-  { name: 'Sequoia India', amount: 20000000, status: 'Committed', type: 'Lead VC' },
-  { name: 'Nexus VP', amount: 10000000, status: 'Committed', type: 'VC' },
-  { name: 'Anjali Gupta', amount: 2000000, status: 'Committed', type: 'Angel' },
-  { name: 'Dev Patel', amount: 500000, status: 'Committed', type: 'Angel' },
-  { name: 'Accel India', amount: 15000000, status: 'In Diligence', type: 'VC' },
-  { name: 'Kalaari Capital', amount: 8000000, status: 'In Discussion', type: 'VC' },
-  { name: 'Blume Ventures', amount: 3000000, status: 'Committed', type: 'VC' },
+  { name: 'Water Supply & Sanitation', amount: 2500000, status: 'Committed', type: 'Department' },
+  { name: 'Urban Development', amount: 2500000, status: 'Committed', type: 'Department' },
+  { name: 'Pune Municipal Corporation', amount: 1500000, status: 'Committed', type: 'Urban Body' },
+  { name: 'Nagpur Municipal Corporation', amount: 1500000, status: 'Committed', type: 'Urban Body' },
+  { name: 'Public Health', amount: 2500000, status: 'In Diligence', type: 'Department' },
+  { name: 'Transport (MSRTC)', amount: 1500000, status: 'In Discussion', type: 'Undertaking' },
+  { name: 'Agriculture', amount: 1500000, status: 'Committed', type: 'Department' },
 ];
 
 const ACTIVITY = [
-  { icon: GitBranch, text: 'NeuralKit advanced to Growth stage', time: '2m ago', color: '#8b5cf6' },
-  { icon: Plus, text: 'ClimateOS registered — DeepTech', time: '14m ago', color: '#06b6d4' },
+  { icon: GitBranch, text: 'GridSense advanced to In Pilot stage', time: '2m ago', color: '#8b5cf6' },
+  { icon: Plus, text: 'FasalSetu applied — AgriTech challenge', time: '14m ago', color: '#06b6d4' },
   { icon: CalendarDays, text: 'Demo Day 2026 · 47 RSVPs confirmed', time: '1h ago', color: '#10b981' },
-  { icon: Star, text: 'Priya Sharma · 3 new session requests', time: '2h ago', color: '#f59e0b' },
-  { icon: DollarSign, text: 'QuantumGrid · ₹50M round fully closed', time: '5h ago', color: '#34d399' },
-  { icon: Upload, text: 'EduSphere deck viewed 12× by investors', time: '8h ago', color: '#8b5cf6' },
+  { icon: Star, text: 'Expert panel · 3 evaluations pending', time: '2h ago', color: '#f59e0b' },
+  { icon: DollarSign, text: 'AarogyaTrack · final tranche released', time: '5h ago', color: '#34d399' },
+  { icon: Upload, text: 'JalRakshak brief opened 12× by departments', time: '8h ago', color: '#8b5cf6' },
 ];
 
-const MRR_DATA = [{ m: 'Jan', v: 8 }, { m: 'Feb', v: 14 }, { m: 'Mar', v: 22 }, { m: 'Apr', v: 35 }, { m: 'May', v: 52 }, { m: 'Jun', v: 80 }];
+// Analytics series. MRR_DATA now tracks cumulative pilot value released (₹ lakh)
+// and USR_DATA tracks citizens served by live pilots (thousands). The constant
+// names are kept because they are referenced throughout the Analytics tab.
+const MRR_DATA = [{ m: 'Jan', v: 6 }, { m: 'Feb', v: 11 }, { m: 'Mar', v: 18 }, { m: 'Apr', v: 27 }, { m: 'May', v: 38 }, { m: 'Jun', v: 54 }];
 const USR_DATA = [{ m: 'Jan', v: 120 }, { m: 'Feb', v: 210 }, { m: 'Mar', v: 380 }, { m: 'Apr', v: 620 }, { m: 'May', v: 940 }, { m: 'Jun', v: 1580 }];
-const sectorData = [{ label: 'SaaS', val: 38, color: '#06b6d4' }, { label: 'FinTech', val: 24, color: '#f59e0b' }, { label: 'DeepTech', val: 22, color: '#8b5cf6' }, { label: 'HealthTech', val: 10, color: '#10b981' }, { label: 'Other', val: 6, color: '#475569' }];
+const sectorData = [{ label: 'Water', val: 31, color: '#06b6d4' }, { label: 'Mobility', val: 24, color: '#f59e0b' }, { label: 'Health', val: 20, color: '#8b5cf6' }, { label: 'Agriculture', val: 15, color: '#10b981' }, { label: 'Other', val: 10, color: '#475569' }];
 
 
 // ─── SVG Charts ───────────────────────────────────────────────────────────────
@@ -690,10 +701,11 @@ function AsteroidKPIRow({ stats }: { stats: { total: number; raised: number; fun
   const rafRef = useRef<number>(0);
 
   const cards = [
-    { label: 'Total Portfolios', val: stats.total, change: '+2 this month', sub: 'Active companies', icon: Building2, color: ASTEROID_COLORS[0] },
-    { label: 'Capital Raised', val: `₹${(stats.raised / 1e6).toFixed(1)}M`, change: '↑ +₹32.5M', sub: 'Total deployed', icon: Wallet, color: ASTEROID_COLORS[1] },
-    { label: 'Funded / Exited', val: stats.funded, change: '+2 this quarter', sub: 'Successful exits', icon: Award, color: ASTEROID_COLORS[2] },
-    { label: 'Avg IncuScore™', val: stats.avgScore, change: '↑ +3.2 pts', sub: 'Quality index', icon: Target, color: ASTEROID_COLORS[3] },
+    // Pilot budgets are in lakhs, so format in ₹L rather than ₹M.
+    { label: 'Registered Solutions', val: stats.total, change: '+2 this month', sub: 'On the pathway', icon: Building2, color: ASTEROID_COLORS[0] },
+    { label: 'Pilot Value Won', val: `₹${(stats.raised / 1e5).toFixed(1)}L`, change: '↑ +₹7.5L', sub: 'Milestones released', icon: Wallet, color: ASTEROID_COLORS[1] },
+    { label: 'Validated / Scaled', val: stats.funded, change: '+2 this quarter', sub: 'Cleared audit', icon: Award, color: ASTEROID_COLORS[2] },
+    { label: 'Avg FitScore™', val: stats.avgScore, change: '↑ +3.2 pts', sub: 'Challenge fit', icon: Target, color: ASTEROID_COLORS[3] },
   ];
 
   useEffect(() => {
@@ -813,7 +825,7 @@ function HubPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [editingDoc, setEditingDoc] = useState<typeof VAULT_DOCS[0] | null>(null);
-  const [incuScoreState, setIncuScoreState] = useState<{
+  const [incuScoreState, setFitScoreState] = useState<{
     phase: 0 | 1 | 2;
     loading: boolean;
     score: number | null;
@@ -876,7 +888,7 @@ function HubPage() {
   const [signInPromptMsg, setSignInPromptMsg] = useState('');
   // ── Startup credential states ─────────────────────────────────────────────
   const [registerStep, setRegisterStep] = useState<1 | 2>(1);
-  const [registerInitialStage, setRegisterInitialStage] = useState('Ideation');
+  const [registerInitialStage, setRegisterInitialStage] = useState('Applied');
   const [ownerEmailMode, setOwnerEmailMode] = useState<'same' | 'different'>('same');
   const [ownerEmail, setOwnerEmail] = useState('');
   const [ownerPassword, setOwnerPassword] = useState('');
@@ -937,7 +949,7 @@ function HubPage() {
   const [advanceRequestError, setAdvanceRequestError] = useState('');
   const [advanceRequestSubmitting, setAdvanceRequestSubmitting] = useState(false);
   const [advanceRequestDone, setAdvanceRequestDone] = useState(false);
-  const openAddEvent = () => requireAuth('Sign in to submit an event to Incutrack.', () => { setAddEventStep(1); setAddEventDone(false); setAddEventForm({ title: '', type: 'Workshop', date: '', time: '', location: '', locationMode: 'physical', description: '', organiserName: user?.name ?? '', organiserEmail: user?.email ?? '', organiserOrg: userStartups[0]?.name ?? '', maxCapacity: '', prize: '', applicationRequired: false, registrationDeadline: '' }); setAddEventErrors({}); setAddEventOpen(true); });
+  const openAddEvent = () => requireAuth('Sign in to submit an event to Sanyog.', () => { setAddEventStep(1); setAddEventDone(false); setAddEventForm({ title: '', type: 'Workshop', date: '', time: '', location: '', locationMode: 'physical', description: '', organiserName: user?.name ?? '', organiserEmail: user?.email ?? '', organiserOrg: userStartups[0]?.name ?? '', maxCapacity: '', prize: '', applicationRequired: false, registrationDeadline: '' }); setAddEventErrors({}); setAddEventOpen(true); });
   // ── Booking mentor ────────────────────────────────────────────────────────
   const [bookingMentor, setBookingMentor] = useState<typeof MENTORS[0] | null>(null);
   const [bookingForm, setBookingForm] = useState({ date: '', time: '', topic: '', message: '' });
@@ -989,7 +1001,7 @@ function HubPage() {
 
   useEffect(() => { refreshStartups(); }, [refreshStartups]);
 
-  // Re-sync approval status right when the founder heads to the Brand Vault to
+  // Re-sync approval status right when the founder heads to the Solution Vault to
   // upload, and whenever they return to the tab, so a fresh admin approval is
   // reflected without a manual reload.
   useEffect(() => {
@@ -1167,7 +1179,7 @@ function HubPage() {
       setUploadOpen(false);
       setEditingDoc(null);
       setSelectedFile(null);
-      if (btnEl) { btnEl.textContent = 'Add to Brand Vault →'; btnEl.disabled = false; }
+      if (btnEl) { btnEl.textContent = 'Add to Solution Vault →'; btnEl.disabled = false; }
 
       // Store link by startup NAME (not id) so it matches after refresh
       if (latestUserStartup) {
@@ -1178,7 +1190,7 @@ function HubPage() {
       // Phase 2 — rescore based on document
       const relatedStartup = startups[0];
       if (relatedStartup) {
-        setIncuScoreState({
+        setFitScoreState({
           phase: 0, loading: true, score: null, band: '',
           remark: '', strengths: [], improvements: [],
           keywords: [], message: '', readyForVCs: false,
@@ -1204,7 +1216,7 @@ function HubPage() {
           const p2result = await p2res.json();
           if (p2result.irrelevantDocument) {
             // Document is not startup pitch material — don't update score, show warning
-            setIncuScoreState(null);
+            setFitScoreState(null);
             setUploadError(p2result.remark + '\n\n' + (p2result.documentInsights ?? []).join('\n'));
           } else {
             setStartups(prev => prev.map(s =>
@@ -1212,7 +1224,7 @@ function HubPage() {
                 ? { ...s, metrics: { ...s.metrics, pitchScore: p2result.finalScore } }
                 : s
             ));
-            setIncuScoreState({
+            setFitScoreState({
               phase: 2,
               loading: false,
               score: p2result.finalScore,
@@ -1228,7 +1240,7 @@ function HubPage() {
             });
           }
         } catch {
-          setIncuScoreState(null);
+          setFitScoreState(null);
         }
       }
     } catch (err: unknown) {
@@ -1251,7 +1263,7 @@ function HubPage() {
 
   const stats = useMemo(() => ({
     total: startups.length,
-    funded: startups.filter(s => s.stage === 'Funding Secured').length,
+    funded: startups.filter(s => s.stage === 'Scaled').length,
     raised: startups.reduce((a, c) => a + c.raised, 0),
     avgScore: Math.round(startups.reduce((a, c) => a + c.metrics.pitchScore, 0) / startups.length),
   }), [startups]);
@@ -1372,8 +1384,8 @@ function HubPage() {
     ).slice(0, 6);
     return [
       { kind: 'startup', label: 'Startups', dest: 'Pipeline', color: '#8b5cf6', items: startupHits },
-      { kind: 'doc', label: 'Documents', dest: 'Brand Vault', color: '#06b6d4', items: docHits },
-      { kind: 'mentor', label: 'Mentors', dest: 'Mentor Network', color: '#10b981', items: mentorHits },
+      { kind: 'doc', label: 'Documents', dest: 'Solution Vault', color: '#06b6d4', items: docHits },
+      { kind: 'mentor', label: 'Mentors', dest: 'Expert Network', color: '#10b981', items: mentorHits },
       { kind: 'event', label: 'Events', dest: 'Event Arena', color: '#f59e0b', items: eventHits },
     ].filter(g => g.items.length);
   }, [search, startups, vaultDocs, allEvents]);
@@ -1534,7 +1546,7 @@ function HubPage() {
           body: JSON.stringify({
             id: `st-check-${Date.now()}`,
             name: '__pwd_check__', tagline: '', description: '',
-            founder: '', industry: '', stage: 'Ideation',
+            founder: '', industry: '', stage: 'Applied',
             fundingGoal: 0, raised: 0, pitchScore: 0, members: 1,
             created_by_email: null,
             owner_email: null,
@@ -1552,7 +1564,7 @@ function HubPage() {
 
     setRegisterOpen(false);
 
-    setIncuScoreState({
+    setFitScoreState({
       phase: 0, loading: true, score: null, band: '',
       remark: '', strengths: [], improvements: [],
       keywords: [], message: '', readyForVCs: false,
@@ -1603,7 +1615,7 @@ function HubPage() {
         }),
       }).catch(console.error);
 
-      setIncuScoreState({
+      setFitScoreState({
         phase: 1,
         loading: false,
         score: result.total,
@@ -1621,12 +1633,12 @@ function HubPage() {
       setStartups(prev => [{
         ...newS,
         id: `st-${Date.now()}`,
-        stage: 'Ideation',
+        stage: 'Applied',
         raised: 0,
         fundingGoal: Number(newS.fundingGoal) || 0,
         metrics: { members: 1, pitchScore: 68 },
       }, ...prev]);
-      setIncuScoreState(null);
+      setFitScoreState(null);
     }
 
     setNewS({ name: '', tagline: '', description: '', founder: '', industry: 'SaaS', fundingGoal: '' });
@@ -1637,7 +1649,7 @@ function HubPage() {
   const handleSave = e => {
     e.preventDefault();
     const resolvedEditIndustry = editTarget.industry === 'Others' ? editCustomIndustry : editTarget.industry;
-    const updated = { ...editTarget, industry: resolvedEditIndustry, fundingGoal: Number(editTarget.fundingGoal) || 0, raised: editTarget.stage === 'Funding Secured' ? Number(editTarget.fundingGoal) || 0 : Number(editTarget.raised) || 0 };
+    const updated = { ...editTarget, industry: resolvedEditIndustry, fundingGoal: Number(editTarget.fundingGoal) || 0, raised: editTarget.stage === 'Scaled' ? Number(editTarget.fundingGoal) || 0 : Number(editTarget.raised) || 0 };
     setStartups(prev => prev.map(s => s.id === editTarget.id ? updated : s));
     setEditTarget(null);
     fetch('/api/startups/update', {
@@ -1653,13 +1665,15 @@ function HubPage() {
   };
 
   const navItems = [
-    { id: 'overview', label: 'Command Center', icon: LayoutDashboard },
-    { id: 'pipeline', label: 'Pipeline', icon: GitBranch },
-    { id: 'vault', label: 'Brand Vault', icon: FolderKey },
-    { id: 'network', label: 'Mentor Network', icon: Users },
+    // NOTE: tab ids are load-bearing (routing, ?tab= deep links, chatbot context
+    // in src/lib/knowledge.ts). Only the labels change.
+    { id: 'overview', label: 'Command Centre', icon: LayoutDashboard },
+    { id: 'pipeline', label: 'Pilot Pipeline', icon: GitBranch },
+    { id: 'vault', label: 'Solution Vault', icon: FolderKey },
+    { id: 'network', label: 'Expert Network', icon: Users },
     { id: 'events', label: 'Event Arena', icon: CalendarDays },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-    { id: 'funding', label: 'National Capital Matrix', icon: DollarSign },
+    { id: 'funding', label: 'National Procurement Matrix', icon: DollarSign },
     ...(isAdmin ? [{ id: 'admin', label: 'Admin Panel', icon: Shield }] : []),
   ];
 
@@ -1706,7 +1720,7 @@ function HubPage() {
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-white/40 group-hover:text-violet-400 transition-colors shrink-0">
             <polyline points="15 18 9 12 15 6" />
           </svg>
-          <span className="text-[11px] font-bold tracking-[0.05em] text-white/60 group-hover:text-white/80 transition-colors">Incutrack</span>
+          <span className="text-[11px] font-bold tracking-[0.05em] text-white/60 group-hover:text-white/80 transition-colors">Sanyog</span>
           <span className="ml-auto text-[8px] font-semibold tracking-[0.06em] uppercase text-white/25">Home</span>
         </a>
 
@@ -1718,13 +1732,13 @@ function HubPage() {
               </div>
             </div>
             <div className="flex flex-col leading-tight">
-              <span className="text-sm font-extrabold tracking-[0.06em] uppercase text-white">Explore Hub</span>
-              <span className="text-[9px] font-bold tracking-[0.12em] uppercase text-violet-400/85">Startup Portal</span>
+              <span className="text-sm font-extrabold tracking-[0.06em] uppercase text-white">Startup Hub</span>
+              <span className="text-[9px] font-bold tracking-[0.12em] uppercase text-violet-400/85">Solution Portal</span>
             </div>
           </div>
           <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-violet-500/10 border border-violet-500/20">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399] animate-pulse shrink-0" />
-            <span className="text-[9px] font-bold tracking-[0.06em] text-white/60">LIVE GROWTH TRACKING</span>
+            <span className="text-[9px] font-bold tracking-[0.06em] text-white/60">LIVE PILOT TRACKING</span>
           </div>
         </div>
 
@@ -1746,9 +1760,9 @@ function HubPage() {
 
         <div className="p-4 border-t border-white/[0.06] space-y-2.5">
           {[
-            { label: 'Portfolios', val: stats.total, color: 'text-violet-400' },
-            { label: 'Capital', val: `₹${(stats.raised / 1e6).toFixed(1)}M`, color: 'text-emerald-400' },
-            { label: 'Avg Score', val: stats.avgScore, color: 'text-sky-400' },
+            { label: 'Solutions', val: stats.total, color: 'text-violet-400' },
+            { label: 'Released', val: `₹${(stats.raised / 1e5).toFixed(1)}L`, color: 'text-emerald-400' },
+            { label: 'Avg FitScore', val: stats.avgScore, color: 'text-sky-400' },
           ].map(s => (
             <div key={s.label} className="flex justify-between items-center">
               <span className="text-[11px] text-white/25">{s.label}</span>
@@ -1801,7 +1815,7 @@ function HubPage() {
             </button>
             <div>
               <h2 className="hub-topbar-title text-base font-semibold text-white">{navItems.find(n => n.id === tab)?.label}</h2>
-              <p className="text-[11px] text-white/25 mt-0.5">{tab === 'funding' ? 'Live Cross-Border Matchmaking & Capital Activity' : 'Incutrack Marketplace · Live'}</p>
+              <p className="text-[11px] text-white/25 mt-0.5">{tab === 'funding' ? 'Live Cross-Border Matchmaking & Capital Activity' : 'Sanyog Procurement Pathway · Live'}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -1906,7 +1920,7 @@ function HubPage() {
                 </div>
               </>
             )}
-            <button onClick={() => requireAuth('Sign in to register your startup on Incutrack.', () => setRegisterOpen(true))}
+            <button onClick={() => requireAuth('Sign in to register your startup on Sanyog.', () => setRegisterOpen(true))}
               className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold bg-gradient-to-r from-violet-600 to-sky-500 text-white hover:opacity-90 transition shadow-lg shadow-violet-500/20">
               <Plus className="h-3.5 w-3.5" /> Register Startup
             </button>
@@ -2237,8 +2251,8 @@ function HubPage() {
 
           {/* ── PIPELINE ─────────────────────────────────────────────────── */}
           {tab === 'pipeline' && (() => {
-            const STAGE_ICONS: Record<string, string> = { Ideation: '◈', Validation: '⬡', 'MVP Built': '▣', Growth: '⟁', 'Funding Secured': '✦' };
-            const STAGE_DESC: Record<string, string> = { Ideation: 'Concept stage', Validation: 'Testing fit', 'MVP Built': 'Product ready', Growth: 'Scaling up', 'Funding Secured': 'Round closed' };
+            const STAGE_ICONS: Record<string, string> = { Applied: '◈', Screened: '⬡', 'In Pilot': '▣', Validated: '⟁', Scaled: '✦' };
+            const STAGE_DESC: Record<string, string> = { Applied: 'Submitted to a challenge', Screened: 'Eligibility verified', 'In Pilot': 'Running in sandbox', Validated: 'Independently audited', Scaled: 'Procured at scale' };
             return (
               <div className="hub-tab-content" style={{ height: '100%', display: 'flex', flexDirection: 'column', padding: '18px 22px', boxSizing: 'border-box', overflow: 'hidden', position: 'relative', gap: 12 }}>
 
@@ -2515,7 +2529,7 @@ function HubPage() {
                         {/* Add — pinned bottom */}
                         <div style={{ padding: '6px 8px', flexShrink: 0, borderTop: `1px solid ${sc}12` }}>
                           <button
-                            onClick={() => requireAuth('Sign in to register your startup on Incutrack.', () => { setRegisterInitialStage(stage); setRegisterStep(1); setRegisterOpen(true); })}
+                            onClick={() => requireAuth('Sign in to register your startup on Sanyog.', () => { setRegisterInitialStage(stage); setRegisterStep(1); setRegisterOpen(true); })}
                             style={{ width: '100%', padding: '6px', borderRadius: 10, border: `1px dashed ${sc}28`, background: `${sc}05`, color: `${sc}75`, fontSize: 10, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, transition: 'all .18s' }}
                             onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = sc; (e.currentTarget as HTMLButtonElement).style.color = sc; (e.currentTarget as HTMLButtonElement).style.background = `${sc}10`; }}
                             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = `${sc}28`; (e.currentTarget as HTMLButtonElement).style.color = `${sc}75`; (e.currentTarget as HTMLButtonElement).style.background = `${sc}05`; }}>
@@ -2587,7 +2601,7 @@ function HubPage() {
                     </span>
                   )}
                 </div>
-                <button onClick={() => requireAuth('Sign in to upload your deck to the Brand Vault.', async () => {
+                <button onClick={() => requireAuth('Sign in to upload your deck to the Solution Vault.', async () => {
                   // Decide from FRESH server truth so a founder who was just approved
                   // (possibly by an admin in another session) is never wrongly asked
                   // to register again. Falls back to current state if the fetch fails.
@@ -2609,7 +2623,7 @@ function HubPage() {
               {/* ── Stats strip ── */}
               <div className="hub-stat-grid" style={{ flexShrink: 0, display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, position: 'relative', zIndex: 1 }}>
                 {[
-                  { label: 'Brand Decks', val: filteredDocs.length, color: '#8b5cf6', Icon: FolderKey },
+                  { label: 'Solution Docs', val: filteredDocs.length, color: '#8b5cf6', Icon: FolderKey },
                   { label: 'Avg AI Score', val: Math.round(filteredDocs.reduce((a, d) => a + d.score, 0) / (filteredDocs.length || 1)), color: '#06b6d4', Icon: Target },
                   { label: 'Total Views', val: filteredDocs.reduce((a, d) => a + d.views, 0) + '×', color: '#10b981', Icon: Activity },
                   { label: 'Final Docs', val: filteredDocs.filter(d => d.status === 'Final').length, color: '#f59e0b', Icon: CheckCircle },
@@ -2632,7 +2646,7 @@ function HubPage() {
 
               {/* ── Card grid ── */}
               {filteredDocs.length === 0 && (
-                <div style={{ textAlign: 'center', paddingTop: 60, color: 'rgba(255,255,255,0.2)', fontSize: 14, position: 'relative', zIndex: 1 }}>{vaultBrand ? `No Brand Vault documents for ${vaultBrand} yet` : 'No documents of this type'}</div>
+                <div style={{ textAlign: 'center', paddingTop: 60, color: 'rgba(255,255,255,0.2)', fontSize: 14, position: 'relative', zIndex: 1 }}>{vaultBrand ? `No Solution Vault documents for ${vaultBrand} yet` : 'No documents of this type'}</div>
               )}
               <div className="analytics-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', position: 'relative', zIndex: 1 }}>
                 <div className="hub-card-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14 }}>
@@ -2874,7 +2888,7 @@ function HubPage() {
                   {[
                     { label: 'Deck Status', val: diligenceDoc ? 'Uploaded' : 'Not Uploaded', color: diligenceDoc ? '#10b981' : '#64748b', Icon: diligenceDoc ? CheckCircle : AlertTriangle },
                     { label: 'Access Requests', val: pendingCount, color: '#f59e0b', Icon: Key },
-                    { label: 'Approved VCs', val: approvedCount, color: '#6366f1', Icon: UserCheck },
+                    { label: 'Approved Depts', val: approvedCount, color: '#6366f1', Icon: UserCheck },
                     { label: 'Security Level', val: 'AES-256', color: '#06b6d4', Icon: Shield },
                   ].map(s => {
                     const { Icon } = s;
@@ -2965,11 +2979,11 @@ function HubPage() {
                       )}
                     </div>
                     <p style={{ margin: 0, fontSize: 10, color: 'rgba(255,255,255,0.28)', lineHeight: 1.6, background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.15)', borderRadius: 8, padding: '8px 12px', flexShrink: 0 }}>
-                      VCs must explicitly request access. You approve or deny each one individually. Approved VCs can view this deck; denied VCs see nothing.
+                      VCs must explicitly request access. You approve or deny each one individually. Approved Depts can view this deck; denied VCs see nothing.
                     </p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10, overflow: 'auto' }}>
                       {vcRequests.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: '32px 0', color: 'rgba(255,255,255,0.25)', fontSize: 11 }}>No access requests yet. Share your Brand Vault deck to generate interest.</div>
+                        <div style={{ textAlign: 'center', padding: '32px 0', color: 'rgba(255,255,255,0.25)', fontSize: 11 }}>No access requests yet. Share your Solution Vault deck to generate interest.</div>
                       ) : vcRequests.map(req => (
                         <div key={req.id} style={{ background: req.status === 'approved' ? 'rgba(16,185,129,0.07)' : req.status === 'denied' ? 'rgba(248,113,113,0.05)' : 'rgba(255,255,255,0.04)', border: `1px solid ${req.status === 'approved' ? 'rgba(16,185,129,0.25)' : req.status === 'denied' ? 'rgba(248,113,113,0.15)' : 'rgba(255,255,255,0.09)'}`, borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -3319,7 +3333,12 @@ function HubPage() {
                         const isRsvpd = rsvpedIds.includes(ev.id);
                         return (
                           <div key={ev.id} className={`ea2-card${focus?.kind === 'event' && focus.key === ev.id ? ' search-focus' : ''}`}
-                            style={{ borderRadius: 16, border: `1px solid ${ec}1a`, background: `linear-gradient(135deg,${ec}0b 0%,rgba(4,4,12,0.92) 100%)`, overflow: 'hidden', position: 'relative', boxShadow: `0 4px 28px rgba(0,0,0,0.38)` }}
+                            // flexShrink:0 is load-bearing. The parent is a flex column with
+                            // overflow-y:auto, so without it the cards shrink to fit instead of
+                            // scrolling — and because the card is overflow:hidden, the time/
+                            // location row gets clipped off. Only visible once the description
+                            // wraps to two lines (i.e. at 100% zoom but not at 90%).
+                            style={{ borderRadius: 16, border: `1px solid ${ec}1a`, background: `linear-gradient(135deg,${ec}0b 0%,rgba(4,4,12,0.92) 100%)`, overflow: 'hidden', position: 'relative', boxShadow: `0 4px 28px rgba(0,0,0,0.38)`, flexShrink: 0 }}
                           >
                             {/* Left accent bar */}
                             <div className="ea2-leftbar" style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: `linear-gradient(180deg,${ec},${ec}50,transparent)`, opacity: 0.6, transition: 'opacity .22s', borderRadius: '16px 0 0 16px' }} />
@@ -3562,7 +3581,7 @@ function HubPage() {
                 {[
                   { label: 'Total MRR', val: mrrLatest >= 1000 ? `₹${(mrrLatest / 1000).toFixed(1)}M` : `₹${mrrLatest}K`, change: `+${mrrPct}%`, period: 'vs last month', color: '#8b5cf6' },
                   { label: 'Active Users', val: usrLatest >= 1000 ? `${(usrLatest / 1000).toFixed(1)}K` : String(usrLatest), change: `+${usrPct}%`, period: 'vs last month', color: '#06b6d4' },
-                  { label: 'Avg IncuScore™', val: String(stats.avgScore), change: '+3.2', period: 'pts platform avg', color: '#10b981' },
+                  { label: 'Avg FitScore™', val: String(stats.avgScore), change: '+3.2', period: 'pts platform avg', color: '#10b981' },
                   { label: 'Burn Multiple', val: burnMultiple === '—' ? '—' : `${burnMultiple}×`, change: '-0.3×', period: 'improving QoQ', color: '#f59e0b' },
                 ].map(k => (
                   <div key={k.label} style={{
@@ -3683,11 +3702,11 @@ function HubPage() {
                   </div>
                 </div>
 
-                {/* ══ IncuScore Rankings — 3D Medal Cards ══ */}
+                {/* ══ FitScore Rankings — 3D Medal Cards ══ */}
                 <div className="an-panel" style={{ background: 'rgba(0,0,0,0.62)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '16px 18px', display: 'flex', flexDirection: 'column', overflow: 'hidden', backdropFilter: 'blur(18px)', position: 'relative' }}>
                   <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg,transparent,rgba(139,92,246,0.55),transparent)' }} />
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, flexShrink: 0 }}>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: 'white', margin: 0 }}>IncuScore™ Rankings</p>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: 'white', margin: 0 }}>FitScore™ Rankings</p>
                     <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.22)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>out of 100</span>
                   </div>
 
@@ -4750,12 +4769,12 @@ function HubPage() {
                 {!url ? (() => {
                   const brand = vd.name.replace(/v\d[\d.]*$/, '').replace(/(Pitch Deck|Executive Summary|Due Diligence Pack|Product Demo|Financial Projections|Cap Table Structure)/gi, '').trim();
                   const taglines: Record<string, string> = {
-                    'NeuralKit': 'No-code ML model builder for every team.',
-                    'FinFlow': 'Decentralised invoice financing at scale.',
-                    'QuantumGrid': 'Next-gen liquid cooling for data clusters.',
-                    'ClimateOS': 'Carbon accounting built for modern SMEs.',
-                    'EduSphere': 'AI-powered personalised study spaces.',
-                    'BioWeave': 'High-performance materials grown from mycelium.',
+                    'JalRakshak Systems': 'Acoustic leak detection for municipal water mains.',
+                    'TransitIQ': 'Live occupancy and schedule adherence for bus fleets.',
+                    'AarogyaTrack': 'AI-assisted chest X-ray triage for TB screening.',
+                    'GridSense': 'Distribution transformer health monitoring.',
+                    'CivicLens': 'Road defect detection from municipal dashcams.',
+                    'FasalSetu': 'Vernacular crop advisory and mandi price intelligence.',
                   };
                   const tagline = taglines[brand] ?? `Innovating the future with ${brand}.`;
                   const mockSlides: Record<string, { title: string; body: string }[]> = {
@@ -5182,7 +5201,7 @@ function HubPage() {
             {registerStep === 1 && (
               <form onSubmit={e => { e.preventDefault(); setRegisterStep(2); setOwnerEmail(user?.email ?? ''); setOwnerEmailMode('same'); setOwnerPassword(''); setOwnerPasswordConfirm(''); setOwnerPasswordError(''); }} className="p-6 space-y-4">
                 <div><label className="block text-[10px] text-white/35 mb-1.5 uppercase tracking-wider">Company Name</label>
-                  <input type="text" required placeholder="e.g. NeuralKit" value={newS.name} onChange={e => setNewS({ ...newS, name: e.target.value })} className={input} /></div>
+                  <input type="text" required placeholder="e.g. JalRakshak Systems" value={newS.name} onChange={e => setNewS({ ...newS, name: e.target.value })} className={input} /></div>
                 <div className="hub-modal-grid grid grid-cols-2 gap-3">
                   <div><label className="block text-[10px] text-white/35 mb-1.5 uppercase tracking-wider">Founder</label>
                     <input type="text" required placeholder="Primary contact" value={newS.founder} onChange={e => setNewS({ ...newS, founder: e.target.value })} className={input} /></div>
@@ -5328,7 +5347,7 @@ function HubPage() {
               <div className="hub-modal-grid grid grid-cols-2 gap-3">
                 <div><label className="block text-[10px] text-white/35 mb-1.5 uppercase tracking-wider">Funding Target</label>
                   <input type="number" required value={editTarget.fundingGoal} onChange={e => setEditTarget({ ...editTarget, fundingGoal: e.target.value })} className={input} /></div>
-                <div><label className="block text-[10px] text-white/35 mb-1.5 uppercase tracking-wider">Capital Raised</label>
+                <div><label className="block text-[10px] text-white/35 mb-1.5 uppercase tracking-wider">Pilot Value Won</label>
                   <input type="number" required value={editTarget.raised} onChange={e => setEditTarget({ ...editTarget, raised: e.target.value })} className={input + " text-emerald-400"} /></div>
               </div>
               <div><label className="block text-[10px] text-white/35 mb-1.5 uppercase tracking-wider">Description</label>
@@ -5436,7 +5455,7 @@ function HubPage() {
                 </div>
                 <p style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 800, color: '#fff' }}>Event Submitted!</p>
                 <p style={{ margin: '0 0 28px', fontSize: 12, color: 'rgba(255,255,255,0.35)', lineHeight: 1.6 }}>
-                  <strong style={{ color: addEventForm.title ? '#a78bfa' : 'inherit' }}>{addEventForm.title}</strong> has been sent to the Incutrack admin team for review. Once approved, it will appear in the Event Arena.
+                  <strong style={{ color: addEventForm.title ? '#a78bfa' : 'inherit' }}>{addEventForm.title}</strong> has been sent to the Sanyog admin team for review. Once approved, it will appear in the Event Arena.
                 </p>
                 <button onClick={() => setAddEventOpen(false)} style={{ padding: '10px 32px', borderRadius: 999, fontSize: 12, fontWeight: 700, background: 'linear-gradient(90deg,#7c3aed,#0ea5e9)', color: 'white', border: 'none', cursor: 'pointer' }}>
                   Done
@@ -5567,7 +5586,7 @@ function HubPage() {
                 {/* Organisation */}
                 <div>
                   <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 6 }}>Organisation / Startup / Institution *</label>
-                  <input value={addEventForm.organiserOrg} onChange={e => setAddEventForm(f => ({ ...f, organiserOrg: e.target.value }))} placeholder="e.g. IIT KGP Entrepreneurship Cell, NeuralKit Inc." style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: `1px solid ${addEventErrors.organiserOrg ? '#f87171' : 'rgba(255,255,255,0.1)'}`, borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#fff', outline: 'none', boxSizing: 'border-box' }} />
+                  <input value={addEventForm.organiserOrg} onChange={e => setAddEventForm(f => ({ ...f, organiserOrg: e.target.value }))} placeholder="e.g. Maharashtra State Innovation Society, Pune Municipal Corporation." style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: `1px solid ${addEventErrors.organiserOrg ? '#f87171' : 'rgba(255,255,255,0.1)'}`, borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#fff', outline: 'none', boxSizing: 'border-box' }} />
                   {addEventErrors.organiserOrg && <p style={{ margin: '4px 0 0', fontSize: 10, color: '#f87171' }}>{addEventErrors.organiserOrg}</p>}
                 </div>
 
@@ -5713,10 +5732,10 @@ function HubPage() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                       {availableStages.map(stage => {
                         const stageDesc: Record<string, string> = {
-                          'Validation': 'You\'ve tested the idea — customer discovery done, early demand proven',
-                          'MVP Built': 'Product is live with active real users using it regularly',
-                          'Growth': 'Consistent MRR growth, clear acquisition channel, 500+ users',
-                          'Funding Secured': 'Term sheet signed or capital committed from investors',
+                          'Screened': 'Recognition verified and eligibility cleared — turnover and prior-experience conditions waived',
+                          'In Pilot': 'Sandbox agreement signed, security clearance obtained, solution running in the live environment',
+                          'Validated': 'Independent third party has measured the pilot against the agreed baseline and KPIs',
+                          'Scaled': 'Cleared for wider deployment across departments or districts without a fresh tender',
                         };
                         const stageCol = STAGE_COLORS[stage] ?? '#8b5cf6';
                         const selected = advanceRequestForm.targetStage === stage;
@@ -5892,7 +5911,7 @@ function HubPage() {
             <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
                 <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: '#fff' }}>What would you like to upload?</p>
-                <p style={{ margin: '3px 0 0', fontSize: 10.5, color: 'rgba(255,255,255,0.3)' }}>Choose the type of document to add to your Brand Vault</p>
+                <p style={{ margin: '3px 0 0', fontSize: 10.5, color: 'rgba(255,255,255,0.3)' }}>Choose the type of document to add to your Solution Vault</p>
               </div>
               <button onClick={() => setUploadChoiceOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.3)' }}><X style={{ width: 16, height: 16 }} /></button>
             </div>
@@ -5920,7 +5939,7 @@ function HubPage() {
                       <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', color: '#10b981', letterSpacing: '0.05em' }}>PUBLIC</span>
                     </div>
                     <p style={{ margin: 0, fontSize: 11, color: 'rgba(255,255,255,0.4)', lineHeight: 1.65 }}>
-                      Your public-facing brand story — value proposition, problem-solution fit, market sizing, and team overview. Visible to all VCs and visitors. <strong style={{ color: 'rgba(255,255,255,0.6)' }}>IncuScore is calculated from this.</strong>
+                      Your public-facing brand story — value proposition, problem-solution fit, market sizing, and team overview. Visible to all VCs and visitors. <strong style={{ color: 'rgba(255,255,255,0.6)' }}>FitScore is calculated from this.</strong>
                     </p>
                   </div>
                   <ChevronRight style={{ width: 16, height: 16, color: 'rgba(139,92,246,0.6)', flexShrink: 0, marginTop: 12 }} />
@@ -5984,7 +6003,7 @@ function HubPage() {
             </div>
 
             <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.45)', lineHeight: 1.6 }}>
-              Replacing will <strong style={{ color: 'rgba(255,255,255,0.7)' }}>permanently remove the current document</strong> from your vault and from investor view. Your IncuScore will be recalculated based on the new upload.
+              Replacing will <strong style={{ color: 'rgba(255,255,255,0.7)' }}>permanently remove the current document</strong> from your vault and from investor view. Your FitScore will be recalculated based on the new upload.
             </p>
 
             {/* Actions */}
@@ -6048,7 +6067,7 @@ function HubPage() {
                       <p style={{ margin: '2px 0 0', fontSize: 10, color: 'rgba(255,255,255,0.35)', lineHeight: 1.5 }}>
                         {uploadMode === 'investor'
                           ? 'This deck will only be visible to VCs you explicitly approve. Contains financials, roadmap & cap table.'
-                          : 'This deck is publicly visible. It\'s used to calculate your IncuScore and generate investor interest.'}
+                          : 'This deck is publicly visible. It\'s used to calculate your FitScore and generate investor interest.'}
                       </p>
                     </div>
                   </div>
@@ -6131,7 +6150,7 @@ function HubPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 13 }}>
                   <div>
                     <label style={{ display: 'block', fontSize: 10, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Document Name</label>
-                    <input id="vup-name" type="text" placeholder="e.g. NeuralKit Pitch Deck v5"
+                    <input id="vup-name" type="text" placeholder="e.g. JalRakshak Pilot Proposal v2"
                       style={{ width: '100%', padding: '9px 13px', fontSize: 12, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 10, color: 'white', outline: 'none', boxSizing: 'border-box' }} />
                   </div>
 
@@ -6240,7 +6259,7 @@ function HubPage() {
             <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: 24 }}>🚀</div>
             <p style={{ fontSize: 18, fontWeight: 700, color: 'white', margin: '0 0 10px' }}>Register Your Startup First</p>
             <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', lineHeight: 1.65, margin: '0 0 24px' }}>
-              Your pitch deck needs a home. Register your startup in the pipeline first — we'll calculate your IncuScore™ and then you can upload your deck for a deeper analysis.
+              Your pitch deck needs a home. Register your startup in the pipeline first — we'll calculate your FitScore™ and then you can upload your deck for a deeper analysis.
             </p>
             <div style={{ display: 'flex', gap: 10 }}>
               <button
@@ -6264,7 +6283,7 @@ function HubPage() {
             <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: 24 }}>⏳</div>
             <p style={{ fontSize: 18, fontWeight: 700, color: 'white', margin: '0 0 10px' }}>Approval Pending</p>
             <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.65, margin: '0 0 24px' }}>
-              Your startup is registered, but our admin team hasn't approved it just yet. Uploads to the Brand Vault open up the moment you're approved — we'd love your patience in the meantime. 🙏
+              Your startup is registered, but our admin team hasn't approved it just yet. Uploads to the Solution Vault open up the moment you're approved — we'd love your patience in the meantime. 🙏
             </p>
             <button
               onClick={() => setUploadPendingGuardOpen(false)}
@@ -6276,15 +6295,15 @@ function HubPage() {
       )}
 
       {incuScoreState && (
-        <IncuScoreModal
+        <FitScoreModal
           state={incuScoreState}
-          onClose={() => setIncuScoreState(null)}
+          onClose={() => setFitScoreState(null)}
         />
       )}
     </div>
   );
 
-  function IncuScoreModal({ state, onClose }: {
+  function FitScoreModal({ state, onClose }: {
     state: NonNullable<typeof incuScoreState>;
     onClose: () => void;
   }) {
@@ -6301,7 +6320,7 @@ function HubPage() {
         <div style={{ textAlign: 'center' }}>
           <div style={{ width: 72, height: 72, margin: '0 auto 24px', borderRadius: '50%', border: '3px solid rgba(139,92,246,0.25)', borderTop: '3px solid #8b5cf6', animation: 'is-spin 1s linear infinite' }} />
           <style>{`@keyframes is-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes is-pulse{0%,100%{opacity:0.35}50%{opacity:1}}`}</style>
-          <p style={{ fontSize: 18, fontWeight: 700, color: 'white', margin: '0 0 8px' }}>Calculating IncuScore™</p>
+          <p style={{ fontSize: 18, fontWeight: 700, color: 'white', margin: '0 0 8px' }}>Calculating FitScore™</p>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.38)', margin: '0 0 24px' }}>
             {state.phase === 0 ? 'Analysing startup fundamentals…' : 'Evaluating your pitch document…'}
           </p>
@@ -6380,7 +6399,7 @@ function HubPage() {
           <div style={{ padding: '14px 16px', borderRadius: 14, background: state.readyForVCs ? 'rgba(16,185,129,0.07)' : 'rgba(139,92,246,0.07)', border: `1px solid ${state.readyForVCs ? 'rgba(16,185,129,0.22)' : 'rgba(139,92,246,0.22)'}`, marginBottom: 20 }}>
             <p style={{ fontSize: 12, color: state.readyForVCs ? '#34d399' : '#a78bfa', margin: 0, lineHeight: 1.65 }}>
               {state.phase === 2 && state.readyForVCs
-                ? `🚀 Best of luck with your investor conversations, ${state.startupName}! Your IncuScore™ signals strong readiness for VC discussions.`
+                ? `🚀 Best of luck with your investor conversations, ${state.startupName}! Your FitScore™ signals strong readiness for VC discussions.`
                 : state.message}
             </p>
           </div>

@@ -32,3 +32,6 @@ dist-ssr
 *.sw?
 .env
 .env.local
+# local secret backups
+.env.original.bak
+.env.bak.*

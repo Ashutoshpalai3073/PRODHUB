@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 
 export const Route = createFileRoute('/auth/callback')({
   component: AuthCallbackPage,
-  head: () => ({ meta: [{ title: 'Signing in… — Incutrack' }] }),
+  head: () => ({ meta: [{ title: 'Signing in… — Sanyog' }] }),
 });
 
 function AuthCallbackPage() {

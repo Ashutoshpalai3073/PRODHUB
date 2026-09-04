@@ -17,84 +17,104 @@ import { supabase } from '../lib/supabase';
 
 export const Route = createFileRoute('/scout')({
     component: ScoutPage,
-    head: () => ({ meta: [{ title: 'Incutrack — Scout Hub (VC Portal)' }] }),
+    head: () => ({ meta: [{ title: 'Sanyog — Department Hub' }] }),
 });
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const STAGE_ORDER = ['Ideation', 'Validation', 'MVP Built', 'Growth', 'Funding Secured'];
+// Procurement stages — must stay identical to STAGE_ORDER in hub.tsx and to the
+// persisted `startups.stage` column. See migration 018.
+const STAGE_ORDER = ['Applied', 'Screened', 'In Pilot', 'Validated', 'Scaled'];
 const STAGE_COLORS: Record<string, string> = {
-    Ideation: '#8b5cf6', Validation: '#06b6d4',
-    'MVP Built': '#f59e0b', Growth: '#10b981', 'Funding Secured': '#34d399',
+    Applied: '#8b5cf6', Screened: '#06b6d4',
+    'In Pilot': '#f59e0b', Validated: '#10b981', Scaled: '#34d399',
 };
 
+// The signed-in department. Field NAMES are unchanged so every downstream
+// reference keeps working; only the meaning and values changed:
+//   aum -> sanctioned innovation budget   dryPowder -> uncommitted
+//   deployed -> committed to pilots       targetReturn -> target cost-benefit
+//   checkMin/checkMax -> pilot budget band per challenge
 const VC_PROFILE = {
-    name: 'Aryan Mehta', firm: 'Nexus Ventures', avatar: 'AM',
-    aum: 2_000_000_000, dryPowder: 420_000_000, deployed: 580_000_000,
-    targetReturn: '3.5×', sectors: ['SaaS', 'FinTech', 'DeepTech'],
-    stages: ['Seed', 'Series A'], checkMin: 5_000_000, checkMax: 50_000_000,
+    name: 'Aryan Mehta', firm: 'Urban Development Department', avatar: 'AM',
+    aum: 20_000_000, dryPowder: 12_000_000, deployed: 8_000_000,
+    targetReturn: '4.1×', sectors: ['Water', 'Mobility', 'Urban Infra'],
+    stages: ['Pilot', 'Scale-up'], checkMin: 500_000, checkMax: 2_500_000,
 };
 
+// Same six solutions as the Startup Hub — the two portals must agree.
+// `mrr` now carries pilot value released (₹), `users` citizens served, and
+// `growth` measured impact against baseline (%).
 const ALL_STARTUPS = [
-    { id: 'st-1', name: 'EduSphere', tagline: 'AI-powered personalised study spaces.', stage: 'Ideation', industry: 'SaaS', founder: 'Ashutosh Palai', fundingGoal: 15_000_000, raised: 2_000_000, score: 88, mrr: 120_000, users: 3_400, growth: 18 },
-    { id: 'st-2', name: 'FinFlow', tagline: 'Decentralised invoice financing.', stage: 'MVP Built', industry: 'FinTech', founder: 'Ankit Raj Singh', fundingGoal: 25_000_000, raised: 12_500_000, score: 92, mrr: 480_000, users: 12_000, growth: 32 },
-    { id: 'st-3', name: 'QuantumGrid', tagline: 'Next-gen cooling for data clusters.', stage: 'Funding Secured', industry: 'DeepTech', founder: 'Pawan Kumar', fundingGoal: 50_000_000, raised: 50_000_000, score: 95, mrr: 2_100_000, users: 42, growth: 8 },
-    { id: 'st-4', name: 'BioWeave', tagline: 'Materials grown from mycelium fungi.', stage: 'Ideation', industry: 'DeepTech', founder: 'Chetan Sharma', fundingGoal: 18_000_000, raised: 0, score: 84, mrr: 0, users: 0, growth: 0 },
-    { id: 'st-5', name: 'ClimateOS', tagline: 'Carbon accounting for SMEs.', stage: 'Validation', industry: 'DeepTech', founder: 'Meera Iyer', fundingGoal: 20_000_000, raised: 3_000_000, score: 79, mrr: 85_000, users: 1_200, growth: 24 },
-    { id: 'st-6', name: 'NeuralKit', tagline: 'No-code ML model builder.', stage: 'Growth', industry: 'SaaS', founder: 'Kabir Sen', fundingGoal: 40_000_000, raised: 28_000_000, score: 93, mrr: 1_400_000, users: 28_000, growth: 41 },
+    { id: 'st-1', name: 'JalRakshak Systems', tagline: 'Acoustic leak detection for water mains.', stage: 'Validated', industry: 'WaterTech', founder: 'Ashutosh Palai', fundingGoal: 2_500_000, raised: 1_750_000, score: 87, mrr: 1_750_000, users: 240_000, growth: 34 },
+    { id: 'st-2', name: 'TransitIQ', tagline: 'Live occupancy for public bus fleets.', stage: 'In Pilot', industry: 'Mobility', founder: 'Kabir Sen', fundingGoal: 1_500_000, raised: 450_000, score: 78, mrr: 450_000, users: 86_000, growth: 19 },
+    { id: 'st-3', name: 'AarogyaTrack', tagline: 'AI chest X-ray triage for TB screening.', stage: 'Scaled', industry: 'HealthTech', founder: 'Meera Iyer', fundingGoal: 2_500_000, raised: 2_500_000, score: 91, mrr: 2_500_000, users: 412_000, growth: 47 },
+    { id: 'st-4', name: 'FasalSetu', tagline: 'Vernacular crop and mandi price advisory.', stage: 'Applied', industry: 'AgriTech', founder: 'Chetan Sharma', fundingGoal: 1_500_000, raised: 0, score: 69, mrr: 0, users: 0, growth: 0 },
+    { id: 'st-5', name: 'CivicLens', tagline: 'Road defect detection from municipal dashcams.', stage: 'Screened', industry: 'Urban Infra', founder: 'Ankit Raj Singh', fundingGoal: 1_500_000, raised: 0, score: 74, mrr: 0, users: 0, growth: 0 },
+    { id: 'st-6', name: 'GridSense', tagline: 'Distribution transformer health monitoring.', stage: 'In Pilot', industry: 'Energy', founder: 'Pawan Kumar', fundingGoal: 2_500_000, raised: 750_000, score: 83, mrr: 750_000, users: 128_000, growth: 22 },
 ];
 
 // `corporate: true` (deck_type 'investor') = the restricted Corporate Pitch Deck uploaded from the
 // Explore Hub Brand Vault. These are the decks founders intend for investors and that surface here.
+// deck_type values 'investor' / 'brand' are PERSISTED in the documents table and
+// must not be renamed — only what they mean to the user changed:
+//   'investor' = confidential submission, released only to approved departments
+//   'brand'    = public material, visible to anyone browsing
 const DILIGENCE_DOCS = [
-    { id: 'd1', startup: 'NeuralKit', name: 'NeuralKit_Private_Vault', type: 'Deck', date: 'Jun 12', access: true, viewed: true, viewedAt: 'Jun 14 09:42', size: '4.2 MB', corporate: true, deck_type: 'investor', file_url: '', status: 'Final' },
-    { id: 'd2', startup: 'NeuralKit', name: 'NeuralKit_Public_Vault', type: 'Sheet', date: 'Jun 10', access: true, viewed: false, viewedAt: null, size: '1.1 MB', corporate: false, deck_type: 'brand', file_url: '', status: 'Final' },
-    { id: 'd3', startup: 'FinFlow', name: 'FinFlow_Private_Vault', type: 'Deck', date: 'Jun 11', access: true, viewed: false, viewedAt: null, size: '5.6 MB', corporate: true, deck_type: 'investor', file_url: '', status: 'Final' },
-    { id: 'd4', startup: 'FinFlow', name: 'FinFlow_Public_Vault', type: 'Doc', date: 'Jun 10', access: true, viewed: true, viewedAt: 'Jun 13 14:18', size: '0.8 MB', corporate: false, deck_type: 'brand', file_url: '', status: 'Final' },
-    { id: 'd5', startup: 'QuantumGrid', name: 'QuantumGrid_Private_Vault', type: 'Deck', date: 'May 30', access: true, viewed: true, viewedAt: 'Jun 12 11:05', size: '8.4 MB', corporate: true, deck_type: 'investor', file_url: '', status: 'Final' },
-    { id: 'd6', startup: 'ClimateOS', name: 'ClimateOS_Private_Vault', type: 'Deck', date: 'Jun 5', access: true, viewed: false, viewedAt: null, size: '3.7 MB', corporate: true, deck_type: 'investor', file_url: '', status: 'Review' },
-    { id: 'd7', startup: 'EduSphere', name: 'EduSphere_Private_Vault', type: 'Deck', date: 'Jun 2', access: true, viewed: false, viewedAt: null, size: '2.9 MB', corporate: true, deck_type: 'investor', file_url: '', status: 'Final' },
-    { id: 'd8', startup: 'BioWeave', name: 'BioWeave_Private_Vault', type: 'Deck', date: 'May 28', access: true, viewed: false, viewedAt: null, size: '3.1 MB', corporate: true, deck_type: 'investor', file_url: '', status: 'Draft' },
+    { id: 'd1', startup: 'JalRakshak Systems', name: 'JalRakshak_Pilot_Proposal', type: 'Deck', date: 'Jun 12', access: true, viewed: true, viewedAt: 'Jun 14 09:42', size: '4.2 MB', corporate: true, deck_type: 'investor', file_url: '', status: 'Final' },
+    { id: 'd2', startup: 'JalRakshak Systems', name: 'JalRakshak_Costing_Sheet', type: 'Sheet', date: 'Jun 10', access: true, viewed: false, viewedAt: null, size: '1.1 MB', corporate: false, deck_type: 'brand', file_url: '', status: 'Final' },
+    { id: 'd3', startup: 'TransitIQ', name: 'TransitIQ_Pilot_Proposal', type: 'Deck', date: 'Jun 11', access: true, viewed: false, viewedAt: null, size: '5.6 MB', corporate: true, deck_type: 'investor', file_url: '', status: 'Final' },
+    { id: 'd4', startup: 'TransitIQ', name: 'TransitIQ_Technical_Spec', type: 'Doc', date: 'Jun 10', access: true, viewed: true, viewedAt: 'Jun 13 14:18', size: '0.8 MB', corporate: false, deck_type: 'brand', file_url: '', status: 'Final' },
+    { id: 'd5', startup: 'AarogyaTrack', name: 'AarogyaTrack_Validation_Report', type: 'Deck', date: 'May 30', access: true, viewed: true, viewedAt: 'Jun 12 11:05', size: '8.4 MB', corporate: true, deck_type: 'investor', file_url: '', status: 'Final' },
+    { id: 'd6', startup: 'GridSense', name: 'GridSense_Security_Clearance', type: 'Deck', date: 'Jun 5', access: true, viewed: false, viewedAt: null, size: '3.7 MB', corporate: true, deck_type: 'investor', file_url: '', status: 'Review' },
+    { id: 'd7', startup: 'CivicLens', name: 'CivicLens_Pilot_Proposal', type: 'Deck', date: 'Jun 2', access: true, viewed: false, viewedAt: null, size: '2.9 MB', corporate: true, deck_type: 'investor', file_url: '', status: 'Final' },
+    { id: 'd8', startup: 'FasalSetu', name: 'FasalSetu_Pilot_Proposal', type: 'Deck', date: 'May 28', access: true, viewed: false, viewedAt: null, size: '3.1 MB', corporate: true, deck_type: 'investor', file_url: '', status: 'Draft' },
 ];
 
 const NETWORK_CONTACTS = [
-    { id: 'c1', name: 'Ashutosh Palai', role: 'Founder', company: 'EduSphere', avatar: 'AP', tag: 'SaaS', lastContact: '2d ago', meetings: 3, msgs: 12 },
-    { id: 'c2', name: 'Ankit Raj Singh', role: 'Co-Founder', company: 'FinFlow', avatar: 'AK', tag: 'FinTech', lastContact: '5d ago', meetings: 5, msgs: 28 },
-    { id: 'c3', name: 'Kabir Sen', role: 'CEO', company: 'NeuralKit', avatar: 'KS', tag: 'SaaS', lastContact: '1d ago', meetings: 7, msgs: 41 },
-    { id: 'c4', name: 'Pawan Kumar', role: 'CTO', company: 'QuantumGrid', avatar: 'PK', tag: 'DeepTech', lastContact: '8d ago', meetings: 4, msgs: 19 },
-    { id: 'c5', name: 'Meera Iyer', role: 'Founder', company: 'ClimateOS', avatar: 'MI', tag: 'DeepTech', lastContact: '12d ago', meetings: 2, msgs: 8 },
-    { id: 'c6', name: 'Chetan Sharma', role: 'Founder', company: 'BioWeave', avatar: 'CS', tag: 'DeepTech', lastContact: '3d ago', meetings: 1, msgs: 4 },
+    { id: 'c1', name: 'Ashutosh Palai', role: 'Founder', company: 'JalRakshak Systems', avatar: 'AP', tag: 'Water', lastContact: '2d ago', meetings: 3, msgs: 12 },
+    { id: 'c2', name: 'Ankit Raj Singh', role: 'Co-Founder', company: 'CivicLens', avatar: 'AK', tag: 'Urban Infra', lastContact: '5d ago', meetings: 5, msgs: 28 },
+    { id: 'c3', name: 'Kabir Sen', role: 'Founder', company: 'TransitIQ', avatar: 'KS', tag: 'Mobility', lastContact: '1d ago', meetings: 7, msgs: 41 },
+    { id: 'c4', name: 'Pawan Kumar', role: 'CTO', company: 'GridSense', avatar: 'PK', tag: 'Energy', lastContact: '8d ago', meetings: 4, msgs: 19 },
+    { id: 'c5', name: 'Meera Iyer', role: 'Founder', company: 'AarogyaTrack', avatar: 'MI', tag: 'Health', lastContact: '12d ago', meetings: 2, msgs: 8 },
+    { id: 'c6', name: 'Chetan Sharma', role: 'Founder', company: 'FasalSetu', avatar: 'CS', tag: 'Agriculture', lastContact: '3d ago', meetings: 1, msgs: 4 },
 ];
 
 const ALL_EVENTS = [
     ...upcomingEvents,
-    { id: 'ev-3', title: 'AI Product Workshop — Build vs Buy', date: 'July 8, 2026', time: '11:00 AM IST', type: 'Workshop', location: 'Online · Zoom', description: 'Deep-dive into when to build proprietary AI vs. integrate APIs.' },
-    { id: 'ev-4', title: 'Hack-to-Scale Hackathon 2026', date: 'July 20, 2026', time: '09:00 AM IST', type: 'Hackathon', location: 'IIT BBS Campus', description: '48-hour hackathon open to all cohort teams. ₹5L prize pool.' },
-    { id: 'ev-5', title: 'Sequoia India Office Hours', date: 'August 3, 2026', time: '02:00 PM IST', type: 'Mentorship', location: 'Virtual', description: 'Closed-door session. Priority for MVP+ stage startups.' },
+    { id: 'ev-3', title: 'Sandbox Readiness Workshop', date: 'July 8, 2026', time: '11:00 AM IST', type: 'Workshop', location: 'Online · MS Teams', description: 'Data-sharing protocol, anonymisation and the security clearance checklist that gates pilot start.' },
+    { id: 'ev-4', title: 'Maharashtra GovTech Hackathon 2026', date: 'July 20, 2026', time: '09:00 AM IST', type: 'Hackathon', location: 'Bombay Exhibition Centre · Mumbai', description: '48 hours on live departmental problem statements. Winners enter the pipeline at Screened.' },
+    { id: 'ev-5', title: 'Nodal Officer Office Hours', date: 'August 3, 2026', time: '02:00 PM IST', type: 'Mentorship', location: 'Virtual', description: 'Open slots to interrogate the baseline, the KPI and who signs off — before committing engineering time.' },
 ];
 
+// Pilots commissioned through the platform. `roi` is measured improvement
+// against the pre-agreed baseline, not a financial return.
 const DEPLOYMENTS = [
-    { startup: 'NeuralKit', amount: 28_000_000, sector: 'SaaS', stage: 'Growth', date: 'Mar 2026', roi: '+41%', color: '#8b5cf6' },
-    { startup: 'QuantumGrid', amount: 50_000_000, sector: 'DeepTech', stage: 'Funding Secured', date: 'Jan 2026', roi: '+67%', color: '#06b6d4' },
-    { startup: 'FinFlow', amount: 12_500_000, sector: 'FinTech', stage: 'MVP Built', date: 'Apr 2026', roi: '+32%', color: '#10b981' },
+    { startup: 'AarogyaTrack', amount: 2_500_000, sector: 'Health', stage: 'Scaled', date: 'Mar 2026', roi: '+47%', color: '#8b5cf6' },
+    { startup: 'JalRakshak Systems', amount: 1_750_000, sector: 'Water', stage: 'Validated', date: 'Jan 2026', roi: '−34%', color: '#06b6d4' },
+    { startup: 'GridSense', amount: 750_000, sector: 'Energy', stage: 'In Pilot', date: 'Apr 2026', roi: '+22%', color: '#10b981' },
 ];
 
+// Problem domains. `deals` = pilots commissioned; `deployed` = ₹ committed.
 const SECTOR_DATA = [
-    { sector: 'SaaS', pct: 38, deployed: 220_000_000, deals: 14, color: '#8b5cf6', growth: '+28%' },
-    { sector: 'FinTech', pct: 27, deployed: 157_000_000, deals: 9, color: '#06b6d4', growth: '+19%' },
-    { sector: 'DeepTech', pct: 22, deployed: 128_000_000, deals: 7, color: '#10b981', growth: '+34%' },
-    { sector: 'HealthTech', pct: 8, deployed: 46_000_000, deals: 3, color: '#f59e0b', growth: '+12%' },
-    { sector: 'Other', pct: 5, deployed: 29_000_000, deals: 2, color: '#6b7280', growth: '+5%' },
+    { sector: 'Water', pct: 31, deployed: 6_200_000, deals: 5, color: '#8b5cf6', growth: '+28%' },
+    { sector: 'Mobility', pct: 24, deployed: 4_800_000, deals: 4, color: '#06b6d4', growth: '+19%' },
+    { sector: 'Health', pct: 20, deployed: 4_000_000, deals: 3, color: '#10b981', growth: '+34%' },
+    { sector: 'Agriculture', pct: 15, deployed: 3_000_000, deals: 2, color: '#f59e0b', growth: '+12%' },
+    { sector: 'Other', pct: 10, deployed: 2_000_000, deals: 2, color: '#6b7280', growth: '+5%' },
 ];
 
-// Seed directory of verified funds — shown to everyone; merged with live /api/vc/list data
+// Seed directory of verified departments — shown to everyone; merged with live
+// /api/vc/list data. Field names map to the vc_profiles table and must not change.
 const VC_SEED = [
-    { firm_name: 'Nexus Ventures', partner_name: 'Aryan Mehta', sectors: 'SaaS, FinTech, DeepTech', stage_pref: 'Seed, Series A', check_min: 5_000_000, check_max: 50_000_000, investment_thesis: 'Backing technical founders building category-defining infrastructure & fintech across India.', status: 'approved' },
-    { firm_name: 'Sequoia India', partner_name: 'Ishaan Kapoor', sectors: 'Consumer, SaaS', stage_pref: 'Series A, Series B', check_min: 20_000_000, check_max: 200_000_000, investment_thesis: 'Partnering with daring founders from idea to IPO.', status: 'approved' },
-    { firm_name: 'Kalaari Capital', partner_name: 'Vani Reddy', sectors: 'FinTech, HealthTech', stage_pref: 'Seed', check_min: 3_000_000, check_max: 30_000_000, investment_thesis: 'Early-stage technology investing with a India-first lens.', status: 'approved' },
-    { firm_name: 'Accel India', partner_name: 'Rohan Das', sectors: 'DeepTech, SaaS', stage_pref: 'Series A', check_min: 10_000_000, check_max: 100_000_000, investment_thesis: 'Backing exceptional teams building global products from India.', status: 'approved' },
-    { firm_name: 'Blume Ventures', partner_name: 'Sana Qureshi', sectors: 'ClimateTech, AgriTech', stage_pref: 'Pre-seed, Seed', check_min: 2_000_000, check_max: 25_000_000, investment_thesis: 'Conviction-led early bets on India’s most ambitious founders.', status: 'approved' },
+    { firm_name: 'Urban Development Department', partner_name: 'Aryan Mehta', sectors: 'Water, Mobility, Urban Infra', stage_pref: 'Pilot, Scale-up', check_min: 500_000, check_max: 2_500_000, investment_thesis: 'Outcome-based challenges on non-revenue water, road asset condition and civic service delivery across municipal corporations.', status: 'approved' },
+    { firm_name: 'Water Supply & Sanitation', partner_name: 'Ishaan Kapoor', sectors: 'Water, Sanitation', stage_pref: 'Pilot', check_min: 500_000, check_max: 2_500_000, investment_thesis: 'Reducing distribution losses and improving continuity of supply in urban and peri-urban networks.', status: 'approved' },
+    { firm_name: 'Public Health Department', partner_name: 'Vani Reddy', sectors: 'Health, Diagnostics', stage_pref: 'Pilot, Scale-up', check_min: 500_000, check_max: 2_500_000, investment_thesis: 'Earlier detection and higher screening throughput in high-burden blocks, measured against district baselines.', status: 'approved' },
+    { firm_name: 'Transport Department (MSRTC)', partner_name: 'Rohan Das', sectors: 'Mobility, Logistics', stage_pref: 'Pilot', check_min: 500_000, check_max: 1_500_000, investment_thesis: 'Schedule adherence, fleet utilisation and passenger information across depot operations.', status: 'approved' },
+    { firm_name: 'Agriculture Department', partner_name: 'Sana Qureshi', sectors: 'Agriculture, Rural', stage_pref: 'Pilot', check_min: 500_000, check_max: 1_500_000, investment_thesis: 'Advisory and market-linkage solutions that reach smallholders in low-connectivity districts.', status: 'approved' },
 ];
 
+// ROI_DATA now tracks measured impact against baseline (%); PIPELINE_DATA the
+// number of live pilots. Constant names kept — referenced across Insights.
 const ROI_DATA = [{ m: 'Jan', v: 12 }, { m: 'Feb', v: 19 }, { m: 'Mar', v: 28 }, { m: 'Apr', v: 35 }, { m: 'May', v: 41 }, { m: 'Jun', v: 52 }];
 const PIPELINE_DATA = [{ m: 'Jan', v: 3 }, { m: 'Feb', v: 5 }, { m: 'Mar', v: 7 }, { m: 'Apr', v: 9 }, { m: 'May', v: 11 }, { m: 'Jun', v: 14 }];
 
@@ -838,7 +858,7 @@ function ScoutPage() {
         return () => document.removeEventListener('click', closeMenus);
     }, []);
 
-    // Removes a fund from the Investor Network — self-removal by the owning investor,
+    // Removes a fund from the Department Network — self-removal by the owning investor,
     // or by an admin acting on anyone's listing. Both require a stated reason.
     const performRemoveVC = (vc: any, reason: string) => {
         setVcList(prev => prev.filter(v => (v.firm_name || '').toLowerCase() !== (vc.firm_name || '').toLowerCase()));
@@ -849,7 +869,7 @@ function ScoutPage() {
             body: JSON.stringify({ email: vc.email, firm_name: vc.firm_name, reason }),
         }).then(async res => {
             if (!res.ok) { showToast('Could not remove that listing.', '#f87171'); loadVCs(); }
-            else showToast(`Removed ${vc.firm_name} from the Investor Network`, '#f59e0b');
+            else showToast(`Removed ${vc.firm_name} from the Department Network`, '#f59e0b');
         }).catch(() => { showToast('Could not remove that listing.', '#f87171'); loadVCs(); });
     };
 
@@ -994,10 +1014,10 @@ function ScoutPage() {
             (e.title || '').toLowerCase().includes(q) || (e.type || '').toLowerCase().includes(q) || (e.location || '').toLowerCase().includes(q)
         ).slice(0, 6);
         return [
-            { kind: 'startup', label: 'Startups', dest: 'Deal Flow', color: '#8b5cf6', items: startupHits },
+            { kind: 'startup', label: 'Startups', dest: 'Challenge Pipeline', color: '#8b5cf6', items: startupHits },
             { kind: 'deck', label: 'Documents', dest: 'Diligence Room', color: '#10b981', items: deckHits },
             { kind: 'founder', label: 'Founders', dest: 'Startup Network', color: '#06b6d4', items: founderHits },
-            { kind: 'investor', label: 'Investors', dest: 'Investor Network', color: '#f59e0b', items: investorHits },
+            { kind: 'investor', label: 'Departments', dest: 'Department Network', color: '#f59e0b', items: investorHits },
             { kind: 'event', label: 'Demo Days', dest: 'Demo Days', color: '#f472b6', items: eventHits },
         ].filter(g => g.items.length);
     }, [scoutSearch, startups, diligenceDocs, vcList, events]);
@@ -1051,22 +1071,24 @@ function ScoutPage() {
     const deployedPct = totalDeployed / (totalDeployed + dryPowder);
 
     const actionFeed = useMemo(() => [
-        { id: 'f1', icon: '🔭', msg: 'NeuralKit crossed ₹14Cr MRR — scout alert triggered', time: '4m ago', color: '#8b5cf6' },
-        { id: 'f2', icon: '📡', msg: 'New deal added: BioWeave · DeepTech · Ideation stage', time: '22m ago', color: '#06b6d4' },
-        { id: 'f3', icon: '⚡', msg: 'QuantumGrid diligence approved by committee', time: '1h ago', color: '#10b981' },
-        { id: 'f4', icon: '🌌', msg: 'ClimateOS requested access to Cap Table doc', time: '3h ago', color: '#f59e0b' },
-        { id: 'f5', icon: '💫', msg: 'Demo Day 2026 · 12 new RSVPs from tier-1 VCs', time: '5h ago', color: '#34d399' },
-        { id: 'f6', icon: '🛸', msg: 'FinFlow growth rate revised upward to +32%', time: '8h ago', color: '#8b5cf6' },
+        { id: 'f1', icon: '🔭', msg: 'JalRakshak cut non-revenue water 34% — validation passed', time: '4m ago', color: '#8b5cf6' },
+        { id: 'f2', icon: '📡', msg: 'New applicant: FasalSetu · Agriculture · Applied stage', time: '22m ago', color: '#06b6d4' },
+        { id: 'f3', icon: '⚡', msg: 'GridSense cleared CERT-In security audit', time: '1h ago', color: '#10b981' },
+        { id: 'f4', icon: '🌌', msg: 'CivicLens requested access to ward GIS dataset', time: '3h ago', color: '#f59e0b' },
+        { id: 'f5', icon: '💫', msg: 'Demo Day 2026 · 12 new RSVPs from departments', time: '5h ago', color: '#34d399' },
+        { id: 'f6', icon: '🛸', msg: 'TransitIQ mid-term KPI demo cleared — tranche 2 released', time: '8h ago', color: '#8b5cf6' },
     ], []);
 
     const TABS = [
-        { id: 'cockpit', label: 'Investment Cockpit', icon: LayoutDashboard },
-        { id: 'dealflow', label: 'Deal Flow', icon: GitBranch },
-        { id: 'diligence', label: 'Diligence Room', icon: FolderKey },
+        // NOTE: tab ids are load-bearing (routing, deep links, chatbot context in
+        // src/lib/knowledge.ts). Only the labels change.
+        { id: 'cockpit', label: 'Procurement Cockpit', icon: LayoutDashboard },
+        { id: 'dealflow', label: 'Challenge Pipeline', icon: GitBranch },
+        { id: 'diligence', label: 'Evaluation Room', icon: FolderKey },
         { id: 'network', label: 'Startup Network', icon: Users },
-        { id: 'vcnetwork', label: 'Investor Network', icon: UserPlus },
+        { id: 'vcnetwork', label: 'Department Network', icon: UserPlus },
         { id: 'demodays', label: 'Demo Days', icon: CalendarDays },
-        { id: 'insights', label: 'Market Insights', icon: BarChart3 },
+        { id: 'insights', label: 'Outcome Insights', icon: BarChart3 },
         { id: 'deployment', label: 'Deployment Tracker', icon: DollarSign },
     ];
 
@@ -1134,7 +1156,7 @@ function ScoutPage() {
                     <div style={{ position: 'absolute', bottom: 60, right: -30, width: 160, height: 160, borderRadius: '50%', background: 'radial-gradient(circle,rgba(6,182,212,.07),transparent 70%)', animation: 'sc-drift 15s ease-in-out infinite reverse' }} />
                 </div>
 
-                {/* Back to Incutrack */}
+                {/* Back to Sanyog */}
                 <div style={{ position: 'relative', zIndex: 1, padding: '10px 12px 8px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                     <button
                         onClick={() => navigate({ to: '/' })}
@@ -1145,7 +1167,7 @@ function ScoutPage() {
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, opacity: .7 }}>
                             <polyline points="15 18 9 12 15 6" />
                         </svg>
-                        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.04em' }}>Incutrack</span>
+                        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.04em' }}>Sanyog</span>
                         <span style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,.25)', letterSpacing: '.06em', textTransform: 'uppercase' }}>Home</span>
                     </button>
                 </div>
@@ -1156,7 +1178,7 @@ function ScoutPage() {
                         <TelescopeCrystal />
                         <div>
                             <div style={{ fontSize: 14, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', color: 'white', lineHeight: 1.2 }}>Scout Hub</div>
-                            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(139,92,246,.85)' }}>VC Portal</div>
+                            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(139,92,246,.85)' }}>Department Portal</div>
                         </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 10, background: 'rgba(139,92,246,.1)', border: '1px solid rgba(139,92,246,.22)' }}>
@@ -1190,7 +1212,7 @@ function ScoutPage() {
                 {/* Bottom KPIs */}
                 <div style={{ position: 'relative', zIndex: 1, padding: '14px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
                     {[
-                        ['Dry Powder', fmt(dryPowder), '#10b981'],
+                        ['Uncommitted', fmt(dryPowder), '#10b981'],
                         ['Deployed', fmt(totalDeployed), '#8b5cf6'],
                         ['Pipeline', fmt(activePipeline), '#f59e0b'],
                     ].map(([l, v, c]) => (
@@ -1439,11 +1461,11 @@ function ScoutPage() {
                                 {/* ── Row 1: KPI strip ── */}
                                 <div className="hub-kpi-5col" style={{ flexShrink: 0, display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 12, position: 'relative', zIndex: 1 }}>
                                     {[
-                                        { label: 'Capital Mandate', val: fmt(VC_PROFILE.aum), sub: 'Deployable on Incutrack', color: '#8b5cf6', Icon: Building2 },
-                                        { label: 'Dry Powder', val: fmt(dryPowder), sub: 'Available to deploy', color: '#10b981', Icon: Zap },
-                                        { label: 'Deployed', val: fmt(totalDeployed), sub: `${(deployedPct * 100).toFixed(0)}% of mandate`, color: '#06b6d4', Icon: TrendingUp },
+                                        { label: 'Innovation Budget', val: fmt(VC_PROFILE.aum), sub: 'Sanctioned for pilots', color: '#8b5cf6', Icon: Building2 },
+                                        { label: 'Uncommitted', val: fmt(dryPowder), sub: 'Available to commit', color: '#10b981', Icon: Zap },
+                                        { label: 'Committed', val: fmt(totalDeployed), sub: `${(deployedPct * 100).toFixed(0)}% of budget`, color: '#06b6d4', Icon: TrendingUp },
                                         { label: 'Shortlisted', val: shortlisted.length, sub: 'Active pipeline', color: '#f59e0b', Icon: Star },
-                                        { label: 'Target MOIC', val: VC_PROFILE.targetReturn, sub: 'Min. return target', color: '#f472b6', Icon: Target },
+                                        { label: 'Target Benefit', val: VC_PROFILE.targetReturn, sub: 'Min. cost-benefit', color: '#f472b6', Icon: Target },
                                     ].map(k => (
                                         <div key={k.label} className="sc-card" style={{ borderRadius: 16, border: `1px solid ${k.color}25`, background: `linear-gradient(135deg,${k.color}10 0%,rgba(5,5,9,.92) 70%)`, padding: '13px 16px', position: 'relative', overflow: 'hidden', cursor: 'default' }}>
                                             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg,transparent,${k.color}70,transparent)` }} />
@@ -1475,7 +1497,7 @@ function ScoutPage() {
                                             </div>
                                         </div>
                                         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                                            {[['Deployed', totalDeployed, '#8b5cf6'], ['Dry Powder', dryPowder, '#10b981']].map(([l, v, c]) => (
+                                            {[['Deployed', totalDeployed, '#8b5cf6'], ['Uncommitted', dryPowder, '#10b981']].map(([l, v, c]) => (
                                                 <div key={String(l)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 10px', borderRadius: 10, background: `${c}0d`, border: `1px solid ${c}22` }}>
                                                     <span style={{ fontSize: 10, color: 'rgba(255,255,255,.4)' }}>{l}</span>
                                                     <span style={{ fontSize: 12, fontWeight: 800, color: String(c) }}>{fmt(Number(v))}</span>
@@ -1546,7 +1568,7 @@ function ScoutPage() {
                                                 {/* ROI sparkline */}
                                                 <div style={{ marginTop: 8, padding: '11px', borderRadius: 12, background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.06)', flexShrink: 0 }}>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                                                        <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,.28)', textTransform: 'uppercase', letterSpacing: '.1em' }}>Sourced Deal Yield</span>
+                                                        <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,.28)', textTransform: 'uppercase', letterSpacing: '.1em' }}>Pilot Success Rate</span>
                                                         <span style={{ fontSize: 11, fontWeight: 800, color: '#10b981' }}>+52%</span>
                                                     </div>
                                                     <AreaChart data={ROI_DATA} color="#10b981" h={55} />
@@ -1799,7 +1821,7 @@ function ScoutPage() {
                                                             </div>
                                                             <p style={{ fontSize: 10, color: 'rgba(255,255,255,.35)', lineHeight: 1.5, margin: '0 0 8px', flex: 1, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{s.tagline}</p>
                                                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4, marginBottom: 8, flexShrink: 0 }}>
-                                                                {[['MRR', s.mrr > 0 ? fmt(s.mrr) : '—'], ['Users', s.users > 999 ? Math.round(s.users / 1000) + 'K' : s.users || '—'], ['Growth', s.growth > 0 ? `+${s.growth}%` : '—']].map(([l, v]) => (
+                                                                {[['Pilot Value', s.mrr > 0 ? fmt(s.mrr) : '—'], ['Citizens', s.users > 999 ? Math.round(s.users / 1000) + 'K' : s.users || '—'], ['Impact', s.growth > 0 ? `+${s.growth}%` : '—']].map(([l, v]) => (
                                                                     <div key={l} style={{ padding: '4px 0', borderRadius: 8, background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.07)', textAlign: 'center' }}>
                                                                         <p style={{ fontSize: 7, color: 'rgba(255,255,255,.25)', margin: 0, textTransform: 'uppercase', letterSpacing: '.05em' }}>{l}</p>
                                                                         <p style={{ fontSize: 10, fontWeight: 800, color: 'white', margin: 0 }}>{v}</p>
@@ -2054,7 +2076,7 @@ function ScoutPage() {
                                                                     {doc.corporate && (
                                                                         <div title="Corporate pitch deck — verified investors only" style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 999, background: 'rgba(6,182,212,.12)', border: '1px solid rgba(6,182,212,.32)', flexShrink: 0 }}>
                                                                             <Shield style={{ width: 9, height: 9, color: '#06b6d4' }} />
-                                                                            <span style={{ fontSize: 9, fontWeight: 800, color: '#06b6d4', letterSpacing: '.05em' }}>CORPORATE · VC ONLY</span>
+                                                                            <span style={{ fontSize: 9, fontWeight: 800, color: '#06b6d4', letterSpacing: '.05em' }}>CONFIDENTIAL · DEPT ONLY</span>
                                                                         </div>
                                                                     )}
                                                                     {isViewed && (
@@ -2572,11 +2594,11 @@ function ScoutPage() {
         </div>
         <div style={{ padding:'10px 12px',display:'flex',flexDirection:'column',gap:7 }}>
             {[
-                { sector:'SaaS',pct:38,col:'#8b5cf6',deals:14,deployed:'₹220Cr',stage:'Growth' },
-                { sector:'FinTech',pct:27,col:'#06b6d4',deals:9,deployed:'₹157Cr',stage:'MVP Built' },
-                { sector:'DeepTech',pct:22,col:'#10b981',deals:7,deployed:'₹128Cr',stage:'Validation' },
-                { sector:'HealthTech',pct:8,col:'#f59e0b',deals:3,deployed:'₹46Cr',stage:'Ideation' },
-                { sector:'Other',pct:5,col:'#6b7280',deals:2,deployed:'₹29Cr',stage:'Ideation' },
+                { sector:'Water',pct:31,col:'#8b5cf6',deals:5,deployed:'₹62L',stage:'Validated' },
+                { sector:'Mobility',pct:24,col:'#06b6d4',deals:4,deployed:'₹48L',stage:'In Pilot' },
+                { sector:'Health',pct:20,col:'#10b981',deals:3,deployed:'₹40L',stage:'Scaled' },
+                { sector:'Agriculture',pct:15,col:'#f59e0b',deals:2,deployed:'₹30L',stage:'Applied' },
+                { sector:'Other',pct:10,col:'#6b7280',deals:2,deployed:'₹20L',stage:'Screened' },
             ].map((s,i)=>(
                 <div key={i} style={{ padding:'10px 12px',borderRadius:10,background:`linear-gradient(135deg,${s.col}0c,${s.col}05)`,border:`1px solid ${s.col}22`,position:'relative',overflow:'hidden' }}>
                     <div style={{ position:'absolute',top:0,left:0,right:0,height:1,background:`linear-gradient(90deg,transparent,${s.col}40,transparent)` }} />
@@ -3210,9 +3232,9 @@ function ScoutPage() {
                             {/* ── KPI strip ── */}
                             <div className="sc-stat-grid" style={{ flexShrink: 0, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, position: 'relative', zIndex: 1 }}>
                                 {[
-                                    { label: 'Capital Transacted', val: fmt(deployedVal), sub: isAll ? 'Closed via Incutrack' : sectorLabel, color: '#8b5cf6', Icon: TrendingUp },
+                                    { label: 'Value Committed', val: fmt(deployedVal), sub: isAll ? 'Closed via Sanyog' : sectorLabel, color: '#8b5cf6', Icon: TrendingUp },
                                     { label: 'Sourced Yield', val: `+${roiPct}%`, sub: isAll ? 'H1 2026 average' : `${sectorLabel} growth`, color: '#10b981', Icon: BarChart3 },
-                                    { label: 'Active Deals', val: `${dealsVal}`, sub: 'In pipeline', color: '#06b6d4', Icon: Target },
+                                    { label: 'Active Pilots', val: `${dealsVal}`, sub: 'In pipeline', color: '#06b6d4', Icon: Target },
                                     { label: 'Avg Score', val: `${avgScore}`, sub: isAll ? 'Match quality' : `${insightStartups.length} ${insightStartups.length === 1 ? 'company' : 'companies'}`, color: '#f59e0b', Icon: Star },
                                 ].map(k => (
                                     <div key={k.label} className="sc-card" style={{ borderRadius: 16, border: `1px solid ${k.color}25`, background: `linear-gradient(135deg,${k.color}10 0%,rgba(5,5,9,.9) 70%)`, padding: '14px 16px', position: 'relative', overflow: 'hidden', cursor: 'default' }}>
@@ -3309,7 +3331,7 @@ function ScoutPage() {
                                     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg,transparent,rgba(16,185,129,.7),transparent)' }} />
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, flexShrink: 0 }}>
                                         <div>
-                                            <p style={{ fontSize: 12, fontWeight: 700, color: 'white', margin: 0 }}>Sourced Deal Yield</p>
+                                            <p style={{ fontSize: 12, fontWeight: 700, color: 'white', margin: 0 }}>Pilot Success Rate</p>
                                             <p style={{ fontSize: 10, color: 'rgba(255,255,255,.28)', margin: '2px 0 0' }}>Jan – Jun 2026</p>
                                         </div>
                                         <div style={{ textAlign: 'right' }}>
@@ -3522,9 +3544,9 @@ function ScoutPage() {
             {/* ── KPI strip ── */}
             <div className="sc-stat-grid" style={{ flexShrink: 0, display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, position: 'relative', zIndex: 1 }}>
                 {[
-                    { label: 'Capital Mandate', val: fmt(VC_PROFILE.aum), sub: 'Deployable capital', color: '#8b5cf6', Icon: Building2 },
+                    { label: 'Innovation Budget', val: fmt(VC_PROFILE.aum), sub: 'Sanctioned for pilots', color: '#8b5cf6', Icon: Building2 },
                     { label: 'Deployed', val: fmt(totalD), sub: `${((totalD / fundTotal) * 100).toFixed(0)}% of mandate`, color: '#10b981', Icon: TrendingUp },
-                    { label: 'Dry Powder', val: fmt(dryPowder), sub: `${(((dryPowder) / fundTotal) * 100).toFixed(0)}% available`, color: '#06b6d4', Icon: Wallet },
+                    { label: 'Uncommitted', val: fmt(dryPowder), sub: `${(((dryPowder) / fundTotal) * 100).toFixed(0)}% available`, color: '#06b6d4', Icon: Wallet },
                     { label: 'Avg Sourced Yield', val: '+40%', sub: 'Across positions', color: '#f59e0b', Icon: BarChart3 },
                 ].map(k => (
                     <div key={k.label} className="dp-card" style={{ borderRadius: 16, border: `1px solid ${k.color}25`, background: `linear-gradient(135deg,${k.color}10 0%,rgba(5,5,9,.92) 70%)`, padding: '14px 16px', position: 'relative', overflow: 'hidden', cursor: 'default' }}>
@@ -3801,7 +3823,7 @@ function ScoutPage() {
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                             {[
-                                { label: 'Target MOIC', val: '3.5×', current: 2.1, target: 3.5, color: '#8b5cf6', unit: '×' },
+                                { label: 'Target Benefit', val: '3.5×', current: 2.1, target: 3.5, color: '#8b5cf6', unit: '×' },
                                 { label: 'Current Avg ROI', val: '+40%', current: 40, target: 60, color: '#10b981', unit: '%' },
                                 { label: 'IRR Target', val: '28%', current: 28, target: 35, color: '#06b6d4', unit: '%' },
                                 { label: 'Hold Period', val: '5–7 yrs', current: 2, target: 7, color: '#f59e0b', unit: 'yr' },
@@ -3926,24 +3948,24 @@ function ScoutPage() {
                                     </div>
                                     <div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                                            <p style={{ fontSize: 17, fontWeight: 900, color: 'white', margin: 0, letterSpacing: '-.02em', textShadow: '0 0 18px rgba(139,92,246,.4)' }}>Investor Network</p>
+                                            <p style={{ fontSize: 17, fontWeight: 900, color: 'white', margin: 0, letterSpacing: '-.02em', textShadow: '0 0 18px rgba(139,92,246,.4)' }}>Department Network</p>
                                             <span style={{ fontSize: 10, fontWeight: 800, padding: '3px 10px', borderRadius: 999, color: '#a78bfa', background: 'rgba(139,92,246,.15)', border: '1px solid rgba(139,92,246,.3)' }}>{vcList.length} funds</span>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 10px', borderRadius: 999, background: 'rgba(16,185,129,.1)', border: '1px solid rgba(16,185,129,.28)' }}>
                                                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 6px #10b981', animation: 'iv-pulse 2.2s ease-in-out infinite' }} />
                                                 <span style={{ fontSize: 9, fontWeight: 800, color: '#10b981', letterSpacing: '.08em' }}>VERIFIED</span>
                                             </div>
                                         </div>
-                                        <p style={{ fontSize: 11, color: 'rgba(255,255,255,.4)', margin: '4px 0 0' }}>Every verified fund on Incutrack — a constellation of capital visible to founders, investors &amp; visitors alike.</p>
+                                        <p style={{ fontSize: 11, color: 'rgba(255,255,255,.4)', margin: '4px 0 0' }}>Every verified department on Sanyog — the public record of who is buying innovation, visible to startups, departments &amp; citizens alike.</p>
                                     </div>
                                 </div>
                                 <button onClick={() => setRegisterOpen(true)} className="iv-btn" style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 17px', borderRadius: 11, background: 'linear-gradient(90deg,#7c3aed,#0ea5e9)', color: 'white', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, boxShadow: '0 4px 16px rgba(124,58,237,.4)' }}>
-                                    <UserPlus style={{ width: 13, height: 13 }} />Register Your Fund
+                                    <UserPlus style={{ width: 13, height: 13 }} />Register Your Department
                                 </button>
                             </div>
 
                             <div className="sc-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', position: 'relative', zIndex: 1 }}>
                                 {vcList.length === 0 ? (
-                                    <div style={{ textAlign: 'center', padding: '60px 0', color: 'rgba(255,255,255,.25)', fontSize: 13 }}>No funds listed yet — be the first to register.</div>
+                                    <div style={{ textAlign: 'center', padding: '60px 0', color: 'rgba(255,255,255,.25)', fontSize: 13 }}>No departments listed yet — be the first to register.</div>
                                 ) : (
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 16, paddingBottom: 4 }}>
                                         {(pinned?.kind === 'investor' ? bringToFront(vcList, v => (v.firm_name || '').toLowerCase() === pinned.key) : vcList).map((vc, i) => {
@@ -4059,8 +4081,8 @@ function ScoutPage() {
                         </div>
                         {/* Heading */}
                         <div style={{ textAlign: 'center' }}>
-                            <p style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 800, color: '#fff', letterSpacing: '-.01em' }}>Investor Access Required</p>
-                            <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,.45)', lineHeight: 1.6 }}>This action is reserved for registered investors.<br />Set up your mandate first to unlock deal flow,<br />diligence, network access &amp; event reservations.</p>
+                            <p style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 800, color: '#fff', letterSpacing: '-.01em' }}>Department Access Required</p>
+                            <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,.45)', lineHeight: 1.6 }}>This action is reserved for registered departments.<br />Register your department first to unlock the challenge<br />pipeline, evaluation room, network access &amp; demo days.</p>
                         </div>
                         {/* Divider */}
                         <div style={{ width: '100%', height: 1, background: 'rgba(255,255,255,.07)' }} />
@@ -4212,7 +4234,7 @@ function ScoutPage() {
                                     <label style={{ fontSize: 10, color: 'rgba(255,255,255,.32)', textTransform: 'uppercase', letterSpacing: '.09em', display: 'block', marginBottom: 6 }}>Reason for revoking *</label>
                                     <textarea autoFocus value={revokeReason} onChange={e => setRevokeReason(e.target.value)} placeholder="Why are you removing this startup from your shortlist?" style={{ width: '100%', minHeight: 96, background: 'rgba(255,255,255,.04)', border: `1px solid ${revokeReason.trim() ? 'rgba(255,255,255,.1)' : 'rgba(245,158,11,.3)'}`, borderRadius: 13, color: 'white', fontSize: 14, padding: '10px 13px', resize: 'vertical', outline: 'none', fontFamily: 'Inter,sans-serif', lineHeight: 1.55, boxSizing: 'border-box' }} />
                                 </div>
-                                <p style={{ fontSize: 10, color: 'rgba(255,255,255,.3)', margin: 0, lineHeight: 1.5 }}>This reason is sent to the <strong style={{ color: 'rgba(255,255,255,.55)' }}>Incutrack admin</strong> along with the removal.</p>
+                                <p style={{ fontSize: 10, color: 'rgba(255,255,255,.3)', margin: 0, lineHeight: 1.5 }}>This reason is sent to the <strong style={{ color: 'rgba(255,255,255,.55)' }}>Sanyog admin</strong> along with the removal.</p>
                                 <div style={{ display: 'flex', gap: 10 }}>
                                     <button onClick={() => { setRevokeTarget(null); setRevokeReason(''); }} style={{ flex: 1, padding: '10px', borderRadius: 12, background: 'rgba(255,255,255,.05)', color: 'rgba(255,255,255,.45)', border: '1px solid rgba(255,255,255,.08)', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Cancel</button>
                                     <button
@@ -4240,7 +4262,7 @@ function ScoutPage() {
                                 </div>
                                 <div style={{ minWidth: 0 }}>
                                     <p style={{ fontSize: 16, fontWeight: 700, color: 'white', margin: 0 }}>Remove “{vcRemoveTarget.firm_name}”?</p>
-                                    <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', margin: '2px 0 0' }}>This removes the fund from the Investor Network.</p>
+                                    <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', margin: '2px 0 0' }}>This removes the department from the Department Network.</p>
                                 </div>
                             </div>
                             <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, margin: '0 0 14px' }}>
@@ -4289,7 +4311,7 @@ function ScoutPage() {
                                         <Telescope style={{ width: 13, height: 13, color: '#a78bfa' }} />
                                     </div>
                                     <div>
-                                        <p style={{ fontSize: 14, fontWeight: 700, color: 'white', margin: 0 }}>{myProfile ? 'Edit Your Fund' : 'Register Your Fund'}</p>
+                                        <p style={{ fontSize: 14, fontWeight: 700, color: 'white', margin: 0 }}>{myProfile ? 'Edit Your Department' : 'Register Your Department'}</p>
                                         <p style={{ fontSize: 10, color: 'rgba(255,255,255,.32)', margin: '1px 0 0' }}>{myProfile ? 'Update your investor profile & mandate' : 'Set up your investor profile & mandate password'}</p>
                                     </div>
                                 </div>
@@ -4345,8 +4367,8 @@ function ScoutPage() {
                                     </div>
                                 )}
                                 <p style={{ fontSize: 10, color: 'rgba(255,255,255,.28)', margin: 0, lineHeight: 1.5 }}>{myProfile?.status === 'approved'
-                                    ? <>Your fund is live in the public <strong style={{ color: 'rgba(255,255,255,.55)' }}>Investor Network</strong>. Saving keeps it published with your latest details.</>
-                                    : <>Your profile is submitted for verification. Once the Incutrack team approves it, your fund goes live in the public <strong style={{ color: 'rgba(255,255,255,.55)' }}>Investor Network</strong>.</>}</p>
+                                    ? <>Your department is live in the public <strong style={{ color: 'rgba(255,255,255,.55)' }}>Department Network</strong>. Saving keeps it published with your latest details.</>
+                                    : <>Your profile is submitted for verification. Once the Sanyog team approves it, your department goes live in the public <strong style={{ color: 'rgba(255,255,255,.55)' }}>Department Network</strong>.</>}</p>
                                 <button
                                     disabled={mandateSubmitting}
                                     onClick={async () => {
@@ -4428,7 +4450,7 @@ function ScoutPage() {
                                                 {docOpen.corporate && (
                                                     <span style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '2px 7px', borderRadius: 999, background: 'rgba(6,182,212,.12)', border: '1px solid rgba(6,182,212,.3)', flexShrink: 0 }}>
                                                         <Shield style={{ width: 8, height: 8, color: '#06b6d4' }} />
-                                                        <span style={{ fontSize: 8, fontWeight: 800, color: '#06b6d4', letterSpacing: '.05em' }}>VC ONLY</span>
+                                                        <span style={{ fontSize: 8, fontWeight: 800, color: '#06b6d4', letterSpacing: '.05em' }}>DEPT ONLY</span>
                                                     </span>
                                                 )}
                                             </div>
@@ -4534,7 +4556,7 @@ function ScoutPage() {
                                             placeholder={VC_PROFILE.name}
                                             style={{ width: '100%', background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.1)', borderRadius: 10, padding: '9px 12px', fontSize: 13, color: 'white', outline: 'none', boxSizing: 'border-box' }}
                                         />
-                                        <p style={{ fontSize: 10, color: 'rgba(255,255,255,.3)', margin: 0 }}>Representing <span style={{ color: 'rgba(255,255,255,.6)', fontWeight: 700 }}>{VC_PROFILE.firm}</span> · scouting on behalf of the fund</p>
+                                        <p style={{ fontSize: 10, color: 'rgba(255,255,255,.3)', margin: 0 }}>Representing <span style={{ color: 'rgba(255,255,255,.6)', fontWeight: 700 }}>{VC_PROFILE.firm}</span> · acting on behalf of the department</p>
                                     </div>
                                     <p style={{ fontSize: 10, color: 'rgba(255,255,255,.25)', textAlign: 'center', margin: 0 }}>A calendar invite will be sent to the organiser team</p>
                                     <button
@@ -4578,7 +4600,7 @@ function ScoutPage() {
                                     </div>
                                     <p style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 800, color: '#fff' }}>Event Submitted!</p>
                                     <p style={{ margin: '0 0 28px', fontSize: 12, color: 'rgba(255,255,255,.35)', lineHeight: 1.6 }}>
-                                        <strong style={{ color: '#a78bfa' }}>{addEventForm.title}</strong> has been sent to the Incutrack admin team for review. Once approved, it goes live in Demo Days for all founders &amp; investors.
+                                        <strong style={{ color: '#a78bfa' }}>{addEventForm.title}</strong> has been sent to the Sanyog admin team for review. Once approved, it goes live in Demo Days for all founders &amp; investors.
                                     </p>
                                     <button onClick={resetAddEvent} style={{ padding: '10px 32px', borderRadius: 999, fontSize: 12, fontWeight: 700, background: 'linear-gradient(90deg,#7c3aed,#0ea5e9)', color: 'white', border: 'none', cursor: 'pointer' }}>Done</button>
                                 </div>
@@ -4683,7 +4705,7 @@ function ScoutPage() {
                                         {addEventErrors.organiserEmail && <p style={{ margin: '4px 0 0', fontSize: 10, color: '#f87171' }}>{addEventErrors.organiserEmail}</p>}
                                     </div>
                                     <div>
-                                        <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,.35)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 6 }}>Organisation / Fund / Institution *</label>
+                                        <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,.35)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 6 }}>Department / Organisation / Institution *</label>
                                         <input value={addEventForm.organiserOrg} onChange={e => setAddEventForm(f => ({ ...f, organiserOrg: e.target.value }))} placeholder="e.g. Nexus Ventures, IIT BBS E-Cell" style={{ width: '100%', background: 'rgba(255,255,255,.04)', border: `1px solid ${addEventErrors.organiserOrg ? '#f87171' : 'rgba(255,255,255,.1)'}`, borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#fff', outline: 'none', boxSizing: 'border-box' }} />
                                         {addEventErrors.organiserOrg && <p style={{ margin: '4px 0 0', fontSize: 10, color: '#f87171' }}>{addEventErrors.organiserOrg}</p>}
                                     </div>

@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 
 export const Route = createFileRoute('/signup')({
   component: SignUpPage,
-  head: () => ({ meta: [{ title: 'Sign Up — Incutrack' }] }),
+  head: () => ({ meta: [{ title: 'Sign Up — Sanyog' }] }),
 });
 
 const GoogleIcon = () => (
@@ -83,7 +83,7 @@ function SignUpPage() {
       <div style={{ width: '100%', maxWidth: 400 }}>
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', marginBottom: 32, justifyContent: 'center' }}>
           <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#a78bfa', boxShadow: '0 0 10px rgba(167,139,250,0.7)', display: 'inline-block' }} />
-          <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'white' }}>Incutrack</span>
+          <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'white' }}>Sanyog</span>
         </a>
 
         <div style={{ background: '#0a0a14', border: '1px solid rgba(139,92,246,0.25)', borderTop: '2px solid #8b5cf6', borderRadius: 20, padding: '32px 28px', boxShadow: '0 24px 64px rgba(0,0,0,0.6)', position: 'relative' }}>
@@ -103,7 +103,7 @@ function SignUpPage() {
 
           <h1 style={{ fontSize: 22, fontWeight: 800, color: 'white', margin: '0 0 6px' }}>Sign Up</h1>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: '0 0 28px' }}>
-            {step === 'form' ? 'Create your Incutrack account.' : `Enter the 6-digit code sent to ${email}`}
+            {step === 'form' ? 'Create your Sanyog account.' : `Enter the 6-digit code sent to ${email}`}
           </p>
 
           {error && (

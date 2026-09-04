@@ -12,7 +12,7 @@ export function Chatbot() {
     const location = useLocation()
     const [open, setOpen] = useState(false)
     const [messages, setMessages] = useState<Message[]>([
-        { role: 'assistant', content: "Hey there! 👋 Ask me anything about Incutrack — whether you're a founder or an investor." }
+        { role: 'assistant', content: "Namaste! 👋 Ask me anything about Sanyog — whether you're a government department or a startup." }
     ])
     const [input, setInput] = useState('')
     const [loading, setLoading] = useState(false)
@@ -132,7 +132,7 @@ export function Chatbot() {
                         }}>🚀</div>
                         <div>
                             <div style={{ color: 'white', fontWeight: 600, fontSize: '14px' }}>
-                                Incutrack AI
+                                Sanyog AI
                             </div>
                             <div style={{ color: '#06b6d4', fontSize: '11px' }}>
                                 ● Online
@@ -204,7 +204,7 @@ export function Chatbot() {
                             value={input}
                             onChange={e => setInput(e.target.value)}
                             onKeyDown={e => e.key === 'Enter' && send()}
-                            placeholder="Ask about Incutrack..."
+                            placeholder="Ask about Sanyog..."
                             style={{
                                 flex: 1, background: 'rgba(255,255,255,0.05)',
                                 border: '1px solid rgba(124,58,237,0.3)',

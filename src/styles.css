@@ -132,6 +132,25 @@
   --sidebar-ring: oklch(0.551 0.027 264.364);
 }
 
+/*
+ * ─── TYPE SYSTEM ────────────────────────────────────────────────────────────
+ * Three families, each with one job — registered as Tailwind tokens so
+ * `font-sans` / `font-mono` resolve to real, loaded faces instead of falling
+ * through to whatever the operating system happens to supply.
+ *
+ *   sans        Inter                — every piece of UI and body copy
+ *   mono        IBM Plex Mono        — numerals, KPI values, metric labels, IDs
+ *   devanagari  Noto Sans Devanagari — the संयोग wordmark
+ *
+ * The families are loaded in src/routes/__root.tsx. Keep the two in sync: a
+ * family named here but not linked there silently falls back again.
+ */
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-devanagari: "Noto Sans Devanagari", "Inter", sans-serif;
+}
+
 @layer base {
   * {
     border-color: var(--color-border);
@@ -140,7 +159,68 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+
+    /* Inter, properly set. `font-synthesis-weight: none` stops the browser
+       faking bold weights, which is a large part of why type reads as "off". */
+    font-family: var(--font-sans);
+    font-optical-sizing: auto;
+    font-synthesis-weight: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+
+    /* cv11 = single-storey g, ss01 = open digits. Inter's own recommended
+       defaults for interface text; they are what stop it looking generic. */
+    font-feature-settings: "cv11", "ss01";
+    letter-spacing: -0.011em;
   }
+
+  /* Display sizes need negative tracking or they read loose and balloon-y.
+     Scoped to real heading elements so inline component styles still win. */
+  h1, h2, h3 {
+    letter-spacing: -0.024em;
+    font-optical-sizing: auto;
+  }
+
+  h4, h5, h6 {
+    letter-spacing: -0.016em;
+  }
+}
+
+/* ── Type utilities ─────────────────────────────────────────────────────────
+   .metric  — for any figure the eye needs to compare down a column (KPI values,
+              scores, currency, counts). Tabular numerals keep digits aligned so
+              tables and stat rows stop jittering between renders.
+   .deva    — Devanagari wordmark.                                            */
+.metric {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.deva {
+  font-family: var(--font-devanagari);
+  letter-spacing: 0;
+}
+
+/* ── Scroll-list shrink guard ───────────────────────────────────────────────
+   Every scrolling list in the hubs is a `display:flex; flex-direction:column`
+   container with `overflow-y:auto`. Flex children default to `flex-shrink:1`,
+   so when the content is taller than the box the CARDS SQUASH instead of the
+   list scrolling — and because the cards are `overflow:hidden`, their last row
+   (time / location / meta) is silently clipped.
+
+   It only shows up once a card's text wraps to an extra line, which is why it
+   appeared at 100% browser zoom but not at 90%.
+
+   An inline `flex: 1` still wins over this rule, so empty-state panels that
+   deliberately fill the container keep centring correctly.                   */
+.analytics-scroll > *,
+.admin-scroll-body > *,
+.admin-activity-scroll > *,
+.sc-scroll > *,
+.sc-tab-sidebar > * {
+  flex-shrink: 0;
 }
 
 @keyframes spotlight {
@@ -1315,7 +1395,7 @@ img, video { max-width: 100%; height: auto; }
   .hub-tab-content > div[aria-hidden] { display: none !important; }
 
   /* Diligence doc cards: wrap rows and let the title wrap instead of clipping
-     off the right edge ("NeuralKit Pitc…" / "CORPORATE · VC ON…"). */
+     off the right edge ("JalRakshak Pilot…" / "CONFIDENTIAL · DEPT…"). */
   .dr-doc-row { flex-wrap: wrap !important; row-gap: 10px !important; }
   .dr-doc-head { flex-wrap: wrap !important; }
   .dr-doc-head > span:first-child {

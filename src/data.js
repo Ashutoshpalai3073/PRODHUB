@@ -1,74 +1,92 @@
 // src/data.js
-// Drop this file into your 3D project at: src/data.js
+// Seed data for Sanyog — the innovation-procurement pathway.
+//
+// Field semantics changed with the pivot from the old investor marketplace; the
+// SHAPE is unchanged so nothing downstream breaks:
+//   fundingGoal -> pilot budget sought for the challenge (₹)
+//   raised      -> milestone payments released so far (₹)
+//   pitchScore  -> FitScore™ (solution-to-challenge fit, 0–100)
+//   stage       -> procurement stage; MUST match STAGE_ORDER and the
+//                  `startups.stage` column. See migration 018.
+//
+// Pilot budgets are anchored to the real Maharashtra Startup Week work-order
+// ceiling (₹15 lakh under the 2018 GR, raised to ₹25 lakh by the Maharashtra
+// Startup, Entrepreneurship and Innovation Policy 2025, §13.7).
 
 export const initialStartups = [
   {
     id: "st-1",
-    name: "EduSphere",
-    tagline: "AI-powered personalized study spaces for university campuses.",
-    description: "EduSphere automates room bookings, customizes study playlists, and pairs students with peers working on similar assignments in real-time.",
-    stage: "Ideation",
-    industry: "SaaS",
+    name: "JalRakshak Systems",
+    tagline: "Acoustic leak detection for municipal water networks.",
+    description:
+      "Clamp-on acoustic sensors on distribution mains localise leaks above 5 litres/min within 3 hours, cutting non-revenue water loss. Founder is an ex-water-infrastructure engineer with 9 years in SCADA. Revenue is a per-sensor annual subscription plus a leak-detection SLA.",
+    stage: "Validated",
+    industry: "WaterTech",
     founder: "Ashutosh Palai",
-    fundingGoal: 15000000,
-    raised: 2000000,
-    metrics: { members: 3, pitchScore: 88 }
+    fundingGoal: 2500000,
+    raised: 1750000,
+    metrics: { members: 6, pitchScore: 87 },
   },
   {
     id: "st-2",
-    name: "FinFlow",
-    tagline: "Decentralized invoice financing for micro-businesses.",
-    description: "FinFlow enables small local vendors to get immediate cash flow by unlocking capital tied up in unpaid invoices via an automated ledger.",
-    stage: "MVP Built",
-    industry: "FinTech",
-    founder: "Ankit Raj Singh",
-    fundingGoal: 25000000,
-    raised: 12500000,
-    metrics: { members: 4, pitchScore: 92 }
+    name: "TransitIQ",
+    tagline: "Live occupancy and schedule adherence for public bus fleets.",
+    description:
+      "Retrofit GPS and passenger-counting telemetry gives depot managers live occupancy, bunching alerts and schedule adherence without replacing existing ticketing hardware. Piloted across 60 buses on 4 depot routes.",
+    stage: "In Pilot",
+    industry: "Mobility",
+    founder: "Kabir Sen",
+    fundingGoal: 1500000,
+    raised: 450000,
+    metrics: { members: 4, pitchScore: 78 },
   },
   {
     id: "st-3",
-    name: "QuantumGrid",
-    tagline: "Next-gen cooling systems for heavy data clusters.",
-    description: "Utilizing custom synthetic material matrices to reduce thermal strain on server architectures, cutting energy costs by up to 40%.",
-    stage: "Funding Secured",
-    industry: "DeepTech",
-    founder: "Pawan Kumar",
-    fundingGoal: 50000000,
-    raised: 50000000,
-    metrics: { members: 6, pitchScore: 95 }
+    name: "AarogyaTrack",
+    tagline: "AI-assisted chest X-ray triage for tuberculosis screening.",
+    description:
+      "Computer-aided detection running on handheld X-ray units flags presumptive TB at the point of screening, prioritising confirmatory testing in high-burden blocks. Validated against radiologist-read ground truth on district screening camps.",
+    stage: "Scaled",
+    industry: "HealthTech",
+    founder: "Meera Iyer",
+    fundingGoal: 2500000,
+    raised: 2500000,
+    metrics: { members: 8, pitchScore: 91 },
   },
   {
     id: "st-4",
-    name: "BioWeave",
-    tagline: "Sustainable structural materials grown from mycelium fungi.",
-    description: "BioWeave processes organic agricultural waste with mushroom cultures to create load-bearing, eco-friendly acoustic insulation panels.",
-    stage: "Ideation",
-    industry: "DeepTech",
+    name: "FasalSetu",
+    tagline: "Crop advisory and mandi price intelligence for smallholders.",
+    description:
+      "Vernacular voice advisory over low-end phones combines local weather, soil-card data and mandi arrival prices so smallholders can time sowing and sale decisions. Built for districts with patchy data connectivity.",
+    stage: "Applied",
+    industry: "AgriTech",
     founder: "Chetan Sharma",
-    fundingGoal: 18000000,
+    fundingGoal: 1500000,
     raised: 0,
-    metrics: { members: 2, pitchScore: 84 }
-  }
+    metrics: { members: 3, pitchScore: 69 },
+  },
 ];
 
 export const upcomingEvents = [
   {
     id: "ev-1",
-    title: "India Founder Pitch Summit 2026",
+    title: "Maharashtra Innovation Challenge — Demo Day",
     date: "June 15, 2026",
     time: "10:00 AM IST",
-    type: "Pitching",
-    location: "The Leela Ambience, New Delhi",
-    description: "Top 10 portfolio startups pitch live to a panel of marquee VCs, family offices, and angel syndicates from across India."
+    type: "Demo Day",
+    location: "Yashwantrao Chavan Centre, Mumbai",
+    description:
+      "Shortlisted startups demonstrate working solutions against live departmental challenge statements, in front of nodal officers and the evaluation panel. Outcomes feed directly into pilot work orders.",
   },
   {
     id: "ev-2",
-    title: "FinTech Leaders Roundtable",
+    title: "Challenge Briefing — Urban Water Loss",
     date: "June 28, 2026",
     time: "03:30 PM IST",
-    type: "Mentorship",
-    location: "Taj Lands End, Bandra · Mumbai",
-    description: "Closed-door strategy session with senior leaders from Razorpay, NPCI, and leading NBFCs covering regulatory compliance and payment infrastructure scaling."
-  }
+    type: "Panel Discussion",
+    location: "Online · MS Teams",
+    description:
+      "Open briefing on the non-revenue water challenge: baseline figures, sandbox boundaries, data-sharing protocol and the security clearance checklist. Applicants may put questions to the department directly.",
+  },
 ];

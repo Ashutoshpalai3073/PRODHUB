@@ -3,7 +3,7 @@ import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
 export const Route = createFileRoute('/auth-error')({
   validateSearch: (s: Record<string, unknown>) => ({ reason: (s.reason as string) || '' }),
   component: AuthErrorPage,
-  head: () => ({ meta: [{ title: 'Auth Error — Incutrack' }] }),
+  head: () => ({ meta: [{ title: 'Auth Error — Sanyog' }] }),
 });
 
 const MESSAGES: Record<string, string> = {
@@ -14,7 +14,7 @@ const MESSAGES: Record<string, string> = {
   userinfo_failed:  'Failed to retrieve your Google profile. Please try again.',
   cancelled:        'Authentication was cancelled. Please try again.',
   db_error:         'A server error occurred while creating your account. Please try again.',
-  no_account:       'No Incutrack account is linked to this Google email. If you deleted your account, you’ll need to sign up again to create a fresh one.',
+  no_account:       'No Sanyog account is linked to this Google email. If you deleted your account, you’ll need to sign up again to create a fresh one.',
 };
 
 function AuthErrorPage() {
@@ -27,7 +27,7 @@ function AuthErrorPage() {
       <div style={{ width: '100%', maxWidth: 400, textAlign: 'center' }}>
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', marginBottom: 32, justifyContent: 'center' }}>
           <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#a78bfa', boxShadow: '0 0 10px rgba(167,139,250,0.7)', display: 'inline-block' }} />
-          <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'white' }}>Incutrack</span>
+          <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'white' }}>Sanyog</span>
         </a>
 
         <div style={{ background: '#0a0a14', border: '1px solid rgba(239,68,68,0.3)', borderTop: '2px solid #ef4444', borderRadius: 20, padding: '36px 28px', boxShadow: '0 24px 64px rgba(0,0,0,0.6)' }}>
