@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { PathwayCosmos } from './PathwayCosmos';
-import { CardHolo, MiniPlanet, type HoloKind } from './PathwayHolo';
+import { CardHolo, MiniPlanet, Constellation, type HoloKind } from './PathwayHolo';
 
 // ─── Types (server payload shapes, kept intentionally loose) ──────────────────
 type Challenge = {
@@ -483,7 +483,14 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
                 const dc = DOMAIN_COLORS[ch.domain] ?? C.challenge;
                 const dLeft = daysUntil(ch.closes_on);
                 return (
-                  <div key={ch.id} onClick={() => setDetail(ch)} style={{ borderRadius: 13, border: `1px solid ${dc}24`, background: `linear-gradient(135deg,${dc}0c, rgba(4,4,12,.6))`, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', padding: '11px 13px', cursor: 'pointer' }}>
+                  <div key={ch.id} onClick={() => setDetail(ch)}
+                    onMouseEnter={e => { const el = e.currentTarget; el.style.transform = 'translateY(-2px)'; el.style.borderColor = `${dc}55`; el.style.boxShadow = `0 10px 28px rgba(0,0,0,.45), 0 0 20px ${dc}22`; }}
+                    onMouseLeave={e => { const el = e.currentTarget; el.style.transform = ''; el.style.borderColor = `${dc}24`; el.style.boxShadow = ''; }}
+                    style={{ position: 'relative', overflow: 'hidden', borderRadius: 13, border: `1px solid ${dc}24`, background: `linear-gradient(135deg,${dc}0c, rgba(4,4,12,.6))`, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', padding: '12px 13px 12px 16px', cursor: 'pointer', transition: 'transform .18s ease, border-color .18s ease, box-shadow .18s ease' }}>
+                    {/* each challenge carries its own constellation, seeded by its reference no. */}
+                    <Constellation seed={ch.reference_no} color={dc} />
+                    <span aria-hidden style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${dc}cc, ${dc}11)`, zIndex: 1 }} />
+                    <div style={{ position: 'relative', zIndex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 5, flexWrap: 'wrap' }}>
                       <span className="metric" style={{ fontSize: 9, color: dc, fontWeight: 600 }}>{ch.reference_no}</span>
                       <Pill text={ch.domain} color={dc} />
@@ -502,6 +509,7 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
                         <Btn color={dc} onClick={() => setApplyFor(ch)} ghost>Apply <ArrowRight style={{ width: 11, height: 11 }} /></Btn>
                       </div>
                     )}
+                    </div>
                   </div>
                 );
               })}

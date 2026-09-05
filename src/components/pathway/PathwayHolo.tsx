@@ -259,6 +259,102 @@ export function CardHolo({ kind, color, size = 104, pos = 'tr' }: { kind: HoloKi
   );
 }
 
+// ─── 2D constellation layer — a unique star signature per challenge card ────
+// Plain 2D canvas (no WebGL context cost), one shared ticker for all cards,
+// IntersectionObserver-gated, still frame under prefers-reduced-motion.
+type Entry2D = { ctx: CanvasRenderingContext2D; draw: (t: number) => void; visible: boolean };
+const entries2d = new Set<Entry2D>();
+let raf2d = 0;
+let running2d = false;
+
+function loop2d() {
+  if (entries2d.size === 0) { running2d = false; return; }
+  const t = reduced ? 1.5 : performance.now() / 1000;
+  for (const e of entries2d) { if (e.visible) e.draw(t); }
+  if (reduced) { running2d = false; return; }
+  raf2d = requestAnimationFrame(loop2d);
+}
+function ensureLoop2d() { if (!running2d) { running2d = true; raf2d = requestAnimationFrame(loop2d); } }
+
+function hashSeed(s: string) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+function mulberry32(a: number) {
+  return () => {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+export function Constellation({ seed, color, opacity = 0.55 }: { seed: string; color: string; opacity?: number }) {
+  const ref = useRef<HTMLCanvasElement | null>(null);
+  useEffect(() => {
+    const canvas = ref.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const rnd = mulberry32(hashSeed(seed));
+    const stars = Array.from({ length: 8 }, () => ({
+      x: 0.3 + rnd() * 0.66, y: 0.08 + rnd() * 0.84,
+      r: 0.8 + rnd() * 1.3, ph: rnd() * Math.PI * 2, sp: 0.6 + rnd() * 1.2,
+    }));
+    // link each star to its nearest earlier star → one connected constellation
+    const links: Array<[number, number]> = [];
+    for (let i = 1; i < stars.length; i++) {
+      let best = 0, bd = Infinity;
+      for (let j = 0; j < i; j++) {
+        const d = (stars[i].x - stars[j].x) ** 2 + (stars[i].y - stars[j].y) ** 2;
+        if (d < bd) { bd = d; best = j; }
+      }
+      links.push([i, best]);
+    }
+    let w = 1, h = 1;
+    const resize = () => {
+      const r = canvas.getBoundingClientRect();
+      w = Math.max(1, Math.round(r.width)); h = Math.max(1, Math.round(r.height));
+      canvas.width = w; canvas.height = h;
+    };
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(canvas);
+    const entry: Entry2D = {
+      ctx, visible: true,
+      draw: (t: number) => {
+        ctx.clearRect(0, 0, w, h);
+        ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.globalAlpha = 0.18;
+        ctx.beginPath();
+        for (const [a, b] of links) {
+          ctx.moveTo(stars[a].x * w, stars[a].y * h);
+          ctx.lineTo(stars[b].x * w, stars[b].y * h);
+        }
+        ctx.stroke();
+        ctx.fillStyle = color;
+        for (const s of stars) {
+          const tw = 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(t * s.sp + s.ph));
+          ctx.globalAlpha = tw * 0.9;
+          ctx.beginPath(); ctx.arc(s.x * w, s.y * h, s.r, 0, Math.PI * 2); ctx.fill();
+          ctx.globalAlpha = tw * 0.22;
+          ctx.beginPath(); ctx.arc(s.x * w, s.y * h, s.r * 3, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      },
+    };
+    const io = new IntersectionObserver(([e]) => { entry.visible = e.isIntersecting; if (entry.visible) ensureLoop2d(); });
+    io.observe(canvas);
+    entries2d.add(entry);
+    ensureLoop2d();
+    return () => {
+      io.disconnect(); ro.disconnect(); entries2d.delete(entry);
+      if (entries2d.size === 0) { cancelAnimationFrame(raf2d); running2d = false; }
+    };
+  }, [seed, color]);
+  return <canvas ref={ref} aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', opacity, zIndex: 0 }} />;
+}
+
 // ─── inline planet for the stage stepper (state-aware: dim / glowing) ────────
 export function MiniPlanet({ color, size = 34, dim = false, glow = false }: { color: string; size?: number; dim?: boolean; glow?: boolean }) {
   const ref = useRef<HTMLCanvasElement | null>(null);
