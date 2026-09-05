@@ -1287,6 +1287,15 @@ async function handleStartupAuthVerify(request: Request): Promise<Response> {
 
 // ─── Permanent admin email — hardcoded, never overrideable ───────────────────
 const PERMANENT_ADMIN_EMAIL = 'ashutoshforcorporate@gmail.com';
+// The platform operator's authentic identity: the ministry that owns PS 26136.
+// Applied permanently for the admin account, whatever name the login provider
+// (Google profile, OTP signup form) happens to carry.
+const PERMANENT_ADMIN_NAME = 'Maharashtra State Innovation Society';
+const PERMANENT_ADMIN_ORG = 'Dept. of Skills, Employment, Entrepreneurship & Innovation · Government of Maharashtra';
+function resolveName(email: string, dbName?: unknown): string {
+  if (email.toLowerCase() === PERMANENT_ADMIN_EMAIL) return PERMANENT_ADMIN_NAME;
+  return (typeof dbName === 'string' && dbName) || email.split('@')[0];
+}
 function resolveRole(email: string, dbRole?: string): string {
   if (email.toLowerCase() === PERMANENT_ADMIN_EMAIL) return 'admin';
   return dbRole ?? 'visitor';
@@ -1460,13 +1469,19 @@ async function handleVerifyOTP(request: Request, env: Env): Promise<Response> {
     user = existing;
   }
 
+  // Persist the admin's authentic ministry identity on the OTP path too.
+  if ((user.email as string).toLowerCase() === PERMANENT_ADMIN_EMAIL && user.name !== PERMANENT_ADMIN_NAME) {
+    await admin.from('users').update({ name: PERMANENT_ADMIN_NAME }).eq('email', user.email as string);
+  }
+
   const jwtPayload = {
     email: user.email,
-    name: user.name,
+    name: resolveName(user.email as string, user.name),
     google_id: user.google_id ?? null,
     auth_method: user.auth_method,
     avatar_url: user.avatar_url ?? null,
     role: resolveRole(user.email as string, user.role as string | undefined),
+    org: (user.email as string).toLowerCase() === PERMANENT_ADMIN_EMAIL ? PERMANENT_ADMIN_ORG : null,
   };
 
   const token = await createJWT(jwtPayload, secret);
@@ -1537,11 +1552,12 @@ async function handleMe(request: Request, env: Env): Promise<Response> {
   const { data: dbUser } = await adminClient.from('users').select('role').eq('email', payload.email as string).maybeSingle();
   return jsonRes({
     email: payload.email,
-    name: payload.name,
+    name: resolveName(payload.email as string, payload.name),
     google_id: payload.google_id ?? null,
     auth_method: payload.auth_method,
     avatar_url: payload.avatar_url ?? null,
     role: resolveRole(payload.email as string, dbUser?.role as string | undefined),
+    org: (payload.email as string).toLowerCase() === PERMANENT_ADMIN_EMAIL ? PERMANENT_ADMIN_ORG : null,
   });
 }
 
@@ -1680,10 +1696,16 @@ async function handleGoogleCallback(request: Request, env: Env): Promise<Respons
     return redirect('db_error');
   }
 
+  // Google sign-in must work irrespective of how the account was first
+  // created. An account registered via OTP is LINKED here (google_id and
+  // avatar attached, auth method upgraded) instead of being bounced.
   if (emailUser && emailUser.auth_method === 'otp') {
-    const h = new Headers({ Location: `${frontendUrl}/auth-error?reason=otp_conflict` });
-    clearCookies.forEach(c => h.append('Set-Cookie', c));
-    return new Response(null, { status: 302, headers: h });
+    const { data: linked } = await admin.from('users')
+      .update({ google_id: googleUser.sub, avatar_url: emailUser.avatar_url || googleUser.picture || null, auth_method: 'google' })
+      .eq('email', googleUser.email)
+      .select().single();
+    if (linked) Object.assign(emailUser, linked);
+    console.log('[google-callback] linked existing OTP account to Google:', googleUser.email);
   }
 
   let user: Record<string, unknown>;
@@ -1699,15 +1721,12 @@ async function handleGoogleCallback(request: Request, env: Env): Promise<Respons
     if (byGoogleId) {
       user = byGoogleId;
     } else {
-      // No account exists for this Google email. In LOGIN mode we must NOT
-      // silently create one (this is the path a deleted user would hit) — bounce
-      // them to sign up instead, mirroring the OTP "User not found" behaviour.
-      // Only SIGNUP mode is allowed to create a fresh account.
-      if (mode === 'login') {
-        const h = new Headers({ Location: `${frontendUrl}/auth-error?reason=no_account` });
-        clearCookies.forEach(c => h.append('Set-Cookie', c));
-        return new Response(null, { status: 302, headers: h });
-      }
+      // No account exists for this Google email — create one on the spot,
+      // in login mode as well as signup mode. Google sign-in is the one
+      // path that must always succeed: the identity is already verified by
+      // Google, so there is nothing to gain by bouncing the user to a
+      // separate sign-up step. (mode kept for telemetry only.)
+      console.log('[google-callback] creating account on the fly, mode:', mode);
       // Try inserting with role column first; fall back without it if migration 003 not yet run
       let insertResult = await admin.from('users')
         .insert({ email: googleUser.email, name: googleUser.name, google_id: googleUser.sub, avatar_url: googleUser.picture || null, auth_method: 'google', role: resolveRole(googleUser.email, 'visitor') })
@@ -1736,13 +1755,20 @@ async function handleGoogleCallback(request: Request, env: Env): Promise<Respons
     return redirect('db_error');
   }
 
+  // The admin's authentic identity is permanent: whatever name the Google
+  // profile carries, the operator signs as the ministry that owns PS 26136.
+  if ((user.email as string).toLowerCase() === PERMANENT_ADMIN_EMAIL && user.name !== PERMANENT_ADMIN_NAME) {
+    await admin.from('users').update({ name: PERMANENT_ADMIN_NAME }).eq('email', user.email as string);
+  }
+
   const jwtPayload = {
     email: user.email,
-    name: user.name,
+    name: resolveName(user.email as string, user.name),
     google_id: user.google_id ?? null,
     auth_method: user.auth_method,
     avatar_url: user.avatar_url ?? null,
     role: resolveRole(user.email as string, user.role as string | undefined),
+    org: (user.email as string).toLowerCase() === PERMANENT_ADMIN_EMAIL ? PERMANENT_ADMIN_ORG : null,
   };
 
   const token = await createJWT(jwtPayload, jwtSecret);

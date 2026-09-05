@@ -810,6 +810,26 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
         }
         .pathway-stepper{ scrollbar-width: none; }
         .pathway-stepper::-webkit-scrollbar{ display: none; }
+        /* tactile scroll: the lanes click into place per card instead of
+           gliding — proximity snap so long cards never trap the wheel */
+        .pathway-left, .pathway-right{
+          scroll-snap-type: y proximity;
+          scroll-padding-top: 4px;
+          overscroll-behavior: contain;
+          scrollbar-width: thin;
+          scrollbar-color: ${accent}55 transparent;
+        }
+        .pathway-left > *, .pathway-right > *{ scroll-snap-align: start; }
+        .pathway-left::-webkit-scrollbar, .pathway-right::-webkit-scrollbar{ width: 6px; }
+        .pathway-left::-webkit-scrollbar-track, .pathway-right::-webkit-scrollbar-track{ background: transparent; }
+        .pathway-left::-webkit-scrollbar-thumb, .pathway-right::-webkit-scrollbar-thumb{
+          background: ${accent}45; border-radius: 999px; border: 1px solid ${accent}22;
+        }
+        .pathway-left::-webkit-scrollbar-thumb:hover, .pathway-right::-webkit-scrollbar-thumb:hover{ background: ${accent}80; }
+        .pathway-cols{ overscroll-behavior: contain; }
+        @media (max-width: 900px){
+          .pathway-cols{ scroll-snap-type: y proximity; scroll-padding-top: 4px; }
+        }
         .pw-grid2{ display: grid; grid-template-columns: 1fr 1fr; }
         @media (max-width: 640px){
           .pw-grid2{ grid-template-columns: 1fr; }
