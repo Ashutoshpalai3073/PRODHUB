@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { PathwayCosmos } from './PathwayCosmos';
+import { StageVoyage } from './StageVoyage';
 import { CardHolo, MiniPlanet, Constellation, type HoloKind } from './PathwayHolo';
 
 // ─── Types (server payload shapes, kept intentionally loose) ──────────────────
@@ -464,7 +465,7 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
       {/* ── Two-column body ── */}
       {/* rigid frame: the page never scrolls — each column scrolls inside a
           shared grid row, so both columns start and end on the same lines */}
-      <div className="pathway-cols" style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 380px) 1fr', gap: 14, flex: 1, minHeight: 0 }}>
+      <div className="pathway-cols" style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 380px) 1fr', gridTemplateRows: 'minmax(0, 1fr)', gap: 14, flex: 1, minHeight: 0 }}>
 
         {/* ══ LEFT: challenge board + templates — its own scroll lane ══ */}
         <div className="analytics-scroll pathway-left" style={{ display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0, overflowY: 'auto', paddingRight: 2 }}>
@@ -537,7 +538,8 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
         </div>
 
         {/* ══ RIGHT: the pathway for one solution — its own scroll lane ══ */}
-        <div className="analytics-scroll pathway-right" style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0, minHeight: 0, overflowY: 'auto', paddingRight: 2 }}>
+        {/* rigid: the voyage IS the interaction here — the column never scrolls */}
+        <div className="analytics-scroll pathway-right" style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0, minHeight: 0, overflow: 'hidden', paddingRight: 2 }}>
 
           {/* selector + stepper */}
           <Card color={accent} style={{ padding: 16 }} holo="gyro" holoPos="br">
@@ -553,11 +555,11 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
                 </button>
               } />
             {pathway && (
-              <p style={{ fontSize: 11, color: C.dim, margin: '0 0 12px', lineHeight: 1.5 }}>
+              <p style={{ fontSize: 10.5, color: C.dim, margin: '0 0 7px', lineHeight: 1.4 }}>
                 <b style={{ color: 'rgba(255,255,255,.75)' }}>{pathway.startup.name}</b> · {pathway.startup.tagline} — {pathway.startup.founder} · FitScore™ <span className="metric" style={{ color: accent }}>{pathway.startup.pitch_score}</span>
               </p>
             )}
-            <div className="pathway-stepper" style={{ display: 'flex', alignItems: 'flex-start', gap: 0, overflowX: 'auto', paddingBottom: 4 }}>
+            <div className="pathway-stepper" style={{ display: 'flex', alignItems: 'flex-start', gap: 0, overflowX: 'auto', paddingBottom: 2 }}>
               {STEPS.map((s, i) => {
                 const st = stepState(pathway, s.key);
                 const col = st === 'todo' ? 'rgba(255,255,255,0.18)' : s.color;
@@ -566,8 +568,8 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, flex: 1 }}>
                       {/* a live 3D planet per stage: gray while pending, lit in the
                           stage colour once reached, check-badged when complete */}
-                      <div style={{ position: 'relative', width: 34, height: 34 }}>
-                        <MiniPlanet color={s.color} dim={st === 'todo'} glow={st !== 'todo'} />
+                      <div style={{ position: 'relative', width: 26, height: 26 }}>
+                        <MiniPlanet color={s.color} size={26} dim={st === 'todo'} glow={st !== 'todo'} />
                         {st === 'done' && (
                           <div style={{ position: 'absolute', bottom: -2, right: -4, width: 13, height: 13, borderRadius: '50%', background: s.color, border: '1.5px solid #05050c', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <CheckCircle2 style={{ width: 9, height: 9, color: '#04040c' }} />
@@ -576,15 +578,19 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
                       </div>
                       <span style={{ fontSize: 8.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: st === 'todo' ? C.dim : s.color, textAlign: 'center' }}>{s.n}. {s.label}</span>
                     </div>
-                    {i < STEPS.length - 1 && <div style={{ height: 1.5, flexShrink: 0, width: 12, marginTop: 17, background: st === 'done' ? s.color : 'rgba(255,255,255,0.1)' }} />}
+                    {i < STEPS.length - 1 && <div style={{ height: 1.5, flexShrink: 0, width: 12, marginTop: 13, background: st === 'done' ? s.color : 'rgba(255,255,255,0.1)' }} />}
                   </div>
                 );
               })}
             </div>
           </Card>
 
-          {pathway && (<>
-            {/* ── Stage 2/3: application + panel ── */}
+          {pathway && (
+            <StageVoyage
+              labels={['Application & Panel Evaluation', 'Sandbox & Contract', 'Milestone Payments', 'Independent Validation', 'Scale-Up Gate']}
+              colors={[C.evaluate, C.sandbox, C.milestone, C.validate, C.scale]}
+              slides={[
+            /* ── Stage 2/3: application + panel ── */
             <Card color={C.evaluate} style={{ padding: 16 }} holo="binary">
               <SectionHead Icon={Scale} color={C.evaluate} title="Application & Panel Evaluation" tag="STAGES 2–3" />
               {pathway.applications.length === 0 && <p style={{ fontSize: 11.5, color: C.dim, margin: 0 }}>No application yet — {mode === 'startup' ? 'apply to a challenge from the board on the left.' : 'this solution has not applied to any challenge.'}</p>}
@@ -632,9 +638,9 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
                   })()}
                 </div>
               ))}
-            </Card>
+            </Card>,
 
-            {/* ── Stage 4/5: sandbox + contract ── */}
+            /* ── Stage 4/5: sandbox + contract ── */
             <Card color={C.sandbox} style={{ padding: 16 }} holo="cage">
               <SectionHead Icon={FlaskConical} color={C.sandbox} title="Governed Sandbox & Contract" tag="STAGES 4–5" />
               {pathway.sandboxes.length === 0 && <p style={{ fontSize: 11.5, color: C.dim, margin: 0 }}>No sandbox agreement yet. One opens after evaluation — with a fixed exit date, security clearance, and IP retained by the startup.</p>}
@@ -671,9 +677,9 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
                   </div>
                 );
               })}
-            </Card>
+            </Card>,
 
-            {/* ── Stage 6: milestones ── */}
+            /* ── Stage 6: milestones ── */
             <Card color={C.milestone} style={{ padding: 16 }} holo="rings">
               <SectionHead Icon={Wallet} color={C.milestone} title="Milestone Payments" tag="STAGE 6" mb={4}
                 right={<span className="metric" style={{ marginLeft: 'auto', fontSize: 12, color: C.milestone, background: `${C.milestone}10`, border: `1px solid ${C.milestone}2e`, padding: '3px 10px', borderRadius: 999 }}>{fmtL(releasedTotal)} released</span>} />
@@ -711,18 +717,19 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
                   );
                 })}
               </div>
-            </Card>
+            </Card>,
 
-            {/* ── Stage 7: validation ── */}
+            /* ── Stage 7: validation ── */
             <Card color={C.validate} style={{ padding: 16 }} holo="orbit">
               <SectionHead Icon={ShieldCheck} color={C.validate} title="Independent Validation" tag="STAGE 7" mb={4} />
               <p style={{ fontSize: 10, color: C.dim, margin: '0 0 12px', lineHeight: 1.5 }}>Targets are locked before measurement begins (pre-registration) — nobody moves the goalposts, in either direction. The validator supplies the measurement; the verdict is computed against the locked target.</p>
               {pathway.kpis.length === 0 && <p style={{ fontSize: 11.5, color: C.dim, margin: 0 }}>KPIs are locked in from the challenge's baseline–target matrix when the pilot starts.</p>}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+              {/* side-by-side: uses the card's width so the card stays short and unshrunk */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(330px, 1fr))', gap: 10 }}>
                 {pathway.kpis.map(k => {
                   const vCol = k.validation_verdict === 'met' ? C.milestone : k.validation_verdict === 'partially_met' ? C.sandbox : k.validation_verdict === 'not_met' ? C.danger : 'rgba(255,255,255,0.3)';
                   return (
-                    <div key={k.id} style={{ borderRadius: 12, border: `1px solid ${vCol}28`, background: `radial-gradient(circle at 92% -10%, ${vCol}12, transparent 60%), rgba(255,255,255,0.02)`, padding: 12 }}>
+                    <div key={k.id} style={{ borderRadius: 12, border: `1px solid ${vCol}58`, background: `radial-gradient(circle at 92% -10%, ${vCol}2c, transparent 60%), rgba(255,255,255,0.045)`, padding: 13 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 7 }}>
                         <span style={{ fontSize: 11.5, fontWeight: 700, color: 'white' }}>{k.kpi_description}</span>
                         {k.is_go_no_go && <Pill text={`GO/NO-GO · gate ${k.go_no_go_threshold}${k.unit ? ' ' + k.unit : ''}`} color={C.danger} />}
@@ -741,9 +748,9 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
                   );
                 })}
               </div>
-            </Card>
+            </Card>,
 
-            {/* ── Stage 8: scale-up gate ── */}
+            /* ── Stage 8: scale-up gate ── */
             <Card color={C.scale} style={{ padding: 16 }} holo="halo" holoPos="br">
               <SectionHead Icon={Rocket} color={C.scale} title="Scale-Up Gate" tag="STAGE 8" note="unlocks on 3 satisfactory departmental reports (Odisha model)"
                 right={isDept ? <span style={{ marginLeft: 'auto' }}><Btn color={C.scale} ghost onClick={() => setEndorseOpen(true)}>Endorse pilot</Btn></span> : undefined} />
@@ -761,24 +768,26 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
                   })}
                 </div>
                 <div>
-                  <p className="metric" style={{ fontSize: 15, fontWeight: 700, color: gate.gate_unlocked ? C.scale : 'white', margin: 0 }}>{gate.satisfactory_count} / 3 {gate.gate_unlocked && '· GATE UNLOCKED'}</p>
-                  <p style={{ fontSize: 10, color: C.dim, margin: '2px 0 0' }}>{gate.gate_unlocked ? 'Cleared for compliant multi-department deployment — no fresh tender.' : 'Satisfactory endorsements from distinct departments.'}</p>
+                  <p className="metric" style={{ fontSize: 17, fontWeight: 700, color: gate.gate_unlocked ? C.scale : 'white', margin: 0 }}>{gate.satisfactory_count} / 3 {gate.gate_unlocked && '· GATE UNLOCKED'}</p>
+                  <p style={{ fontSize: 11, color: C.dim, margin: '3px 0 0' }}>{gate.gate_unlocked ? 'Cleared for compliant multi-department deployment — no fresh tender.' : 'Satisfactory endorsements from distinct departments.'}</p>
                 </div>
                 <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
                   <Label>Scale-Up Scorecard</Label>
                   <p className="metric" style={{ fontSize: 19, fontWeight: 700, color: scorecard.total >= 60 ? C.scale : C.sandbox, margin: 0 }}>{scorecard.total}<span style={{ fontSize: 10, color: C.dim }}>/100</span></p>
                 </div>
               </div>
+              {/* three-up: endorsements share one row so the card stays short */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 10 }}>
               {pathway.endorsements.map(e => {
                 const vc = e.verdict === 'satisfactory' ? C.scale : C.danger;
                 return (
-                  <div key={e.id} style={{ position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'flex-start', gap: 9, padding: '9px 12px 9px 15px', borderRadius: 10, background: `${vc}0a`, border: `1px solid ${vc}20`, marginBottom: 6 }}>
+                  <div key={e.id} style={{ position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'flex-start', gap: 9, padding: '14px 14px 14px 17px', borderRadius: 11, background: `${vc}1c`, border: `1px solid ${vc}4d` }}>
                     <Constellation seed={e.department_name} color={vc} opacity={0.35} />
                     <span aria-hidden style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${vc}cc, ${vc}11)`, zIndex: 1 }} />
                     {e.verdict === 'satisfactory' ? <CheckCircle2 style={{ width: 13, height: 13, color: C.scale, flexShrink: 0, marginTop: 3, position: 'relative', zIndex: 1 }} /> : <AlertTriangle style={{ width: 13, height: 13, color: C.danger, flexShrink: 0, marginTop: 3, position: 'relative', zIndex: 1 }} />}
                     <div style={{ position: 'relative', zIndex: 1, flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: 11.5, fontWeight: 700, color: 'white', margin: 0 }}>{e.department_name} <span style={{ fontWeight: 400, color: C.dim, fontSize: 9.5 }}>· {e.pilot_ref} · {fmtDate(e.created_at)}</span></p>
-                      {e.note && <p style={{ fontSize: 10.5, color: 'rgba(255,255,255,.5)', margin: '3px 0 0', lineHeight: 1.45 }}>{e.note}</p>}
+                      <p style={{ fontSize: 12.5, fontWeight: 700, color: 'white', margin: 0 }}>{e.department_name} <span style={{ fontWeight: 400, color: C.dim, fontSize: 10 }}>· {e.pilot_ref} · {fmtDate(e.created_at)}</span></p>
+                      {e.note && <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,.62)', margin: '5px 0 0', lineHeight: 1.5 }}>{e.note}</p>}
                     </div>
                     <div style={{ position: 'relative', zIndex: 1, alignSelf: 'center', flexShrink: 0 }}>
                       <MiniPlanet color={vc} size={26} glow />
@@ -786,19 +795,25 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
                   </div>
                 );
               })}
+              </div>
               {gate.gate_unlocked && (
-                <div style={{ marginTop: 10, padding: 13, borderRadius: 12, background: `linear-gradient(120deg,${C.scale}14, transparent)`, border: `1px solid ${C.scale}35`, position: 'relative', overflow: 'hidden' }}>
+                <div style={{ marginTop: 11, padding: 17, borderRadius: 12, background: `linear-gradient(120deg,${C.scale}2a, ${C.scale}08)`, border: `1px solid ${C.scale}60`, position: 'relative', overflow: 'hidden' }}>
                   {/* the prize itself: a spinning gem with sparkles on orbit */}
-                  <CardHolo kind="gem" color={C.scale} size={132} />
-                  <div style={{ position: 'relative', zIndex: 1, paddingRight: 56 }}>
-                    <p style={{ fontSize: 11.5, fontWeight: 800, color: C.scale, margin: '0 0 5px' }}>PROCUREMENT BRIDGE → GeM</p>
-                    <p style={{ fontSize: 10.5, color: 'rgba(255,255,255,.55)', margin: '0 0 10px', lineHeight: 1.55 }}>Validated and gate-cleared. Next compliant step: list on GeM (Startup Runway) with the evidence pack attached, for direct purchase within GFR Rule 149 thresholds — no fresh tender required.</p>
-                    <Btn color={C.scale} onClick={() => { download(`GeM_listing_${pathway.startup.name.replace(/\s+/g, '_')}.md`, gemExportMd(pathway)); flash('ok', 'GeM listing draft downloaded with the full evidence pack.'); }}><Download style={{ width: 12, height: 12 }} />Export GeM listing draft</Btn>
+                  <CardHolo kind="gem" color={C.scale} size={110} />
+                  {/* one horizontal row — button beside the text, not under it —
+                      keeps the card short enough to render at full 100% size */}
+                  <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 18, paddingRight: 44 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 12.5, fontWeight: 800, color: C.scale, margin: '0 0 5px' }}>PROCUREMENT BRIDGE → GeM</p>
+                    <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,.62)', margin: 0, lineHeight: 1.55 }}>Validated and gate-cleared. Next compliant step: list on GeM (Startup Runway) with the evidence pack attached, for direct purchase within GFR Rule 149 thresholds — no fresh tender required.</p>
+                    </div>
+                    <span style={{ flexShrink: 0 }}><Btn color={C.scale} onClick={() => { download(`GeM_listing_${pathway.startup.name.replace(/\s+/g, '_')}.md`, gemExportMd(pathway)); flash('ok', 'GeM listing draft downloaded with the full evidence pack.'); }}><Download style={{ width: 12, height: 12 }} />Export GeM listing draft</Btn></span>
                   </div>
                 </div>
               )}
-            </Card>
-          </>)}
+            </Card>,
+            ]} />
+          )}
         </div>
       </div>
 

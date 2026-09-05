@@ -191,9 +191,11 @@
    .metric  — for any figure the eye needs to compare down a column (KPI values,
               scores, currency, counts). Tabular numerals keep digits aligned so
               tables and stat rows stop jittering between renders.
+              One typeface platform-wide: metrics use the same standard sans as
+              the Command Centre (user decision) — no more mono/sans mixing.
    .deva    — Devanagari wordmark.                                            */
 .metric {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
 }

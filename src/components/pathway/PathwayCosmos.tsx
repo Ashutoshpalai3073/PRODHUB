@@ -8,6 +8,7 @@
 
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import { voyage } from './voyageState';
 
 const ORB_COLORS = [0x8b5cf6, 0x06b6d4, 0xf59e0b, 0x10b981, 0xf472b6];
 
@@ -23,6 +24,10 @@ export function PathwayCosmos({ accent = '#8b5cf6' }: { accent?: string }) {
     const accentColor = new THREE.Color(accent);
 
     const scene = new THREE.Scene();
+    // Sit the whole planetary system a little lower in the panel — the stage
+    // cards were cleared out, so the composition now lives in the open lower
+    // half. More negative = lower.
+    scene.position.y = -2.2;
     const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 200);
     camera.position.set(0, 0.6, 14);
 
@@ -187,9 +192,13 @@ export function PathwayCosmos({ accent = '#8b5cf6' }: { accent?: string }) {
         const a = o.phase + t * o.speed * dt;
         o.mesh.position.set(Math.cos(a) * o.r, o.y + Math.sin(a * 2) * 0.15, Math.sin(a) * o.r * 0.55 - 4);
       });
-      camera.position.x += (target.x * 1.6 - camera.position.x) * 0.03;
-      camera.position.y += (0.6 - target.y * 1.2 - camera.position.y) * 0.03;
-      camera.lookAt(0, 0, -2);
+      // the voyage: scrolling the stage cards flies this camera in toward the
+      // planet — stars stream past, the planet grows as the cards are reached
+      const vprog = voyage.progress;
+      camera.position.x += (target.x * 1.6 + vprog * 2.6 - camera.position.x) * 0.03;
+      camera.position.y += (0.6 - target.y * 1.2 - vprog * 0.9 - camera.position.y) * 0.03;
+      camera.position.z += (14 - vprog * 9.5 - camera.position.z) * 0.04;
+      camera.lookAt(vprog * 3.4, -vprog * 0.9, -2);
       renderer.render(scene, camera);
       raf = requestAnimationFrame(tick);
     };

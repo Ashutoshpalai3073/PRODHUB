@@ -33,6 +33,16 @@ OAuth client ID: `751693881682-5slo7l5b35hobfj63ms10ihrhsjsjnnp.apps.googleuserc
 > `${FRONTEND_URL}/api/auth/google/callback`). A missing `/api/auth/google/callback`
 > path or a trailing slash causes `Error 400: redirect_uri_mismatch`.
 
+**OAuth consent screen (Google Auth Platform → Branding / Audience)**
+- App name `sanyog` · support & developer email: ashutosh.palai2005@gmail.com
+- Authorised domain: `ashutosh-palai2005.workers.dev`
+- Homepage: `https://sanyog.ashutosh-palai2005.workers.dev`
+- Privacy policy: `https://sanyog.ashutosh-palai2005.workers.dev/privacy` (served by `src/routes/privacy.tsx`)
+- Terms of service: `https://sanyog.ashutosh-palai2005.workers.dev/terms` (served by `src/routes/terms.tsx`)
+- Publishing status must be **In production** (basic scopes only — no Google verification
+  needed). While in "Testing", only whitelisted test users can sign in; everyone else
+  gets a 400 on the consent screen. No app logo uploaded (a logo triggers verification).
+
 ---
 
 ## Backend (current)

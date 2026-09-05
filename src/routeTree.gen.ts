@@ -9,14 +9,21 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ScoutRouteImport } from './routes/scout'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HubRouteImport } from './routes/hub'
 import { Route as AuthErrorRouteImport } from './routes/auth-error'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
@@ -25,6 +32,11 @@ const SignupRoute = SignupRouteImport.update({
 const ScoutRoute = ScoutRouteImport.update({
   id: '/scout',
   path: '/scout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -58,8 +70,10 @@ export interface FileRoutesByFullPath {
   '/auth-error': typeof AuthErrorRoute
   '/hub': typeof HubRoute
   '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
   '/scout': typeof ScoutRoute
   '/signup': typeof SignupRoute
+  '/terms': typeof TermsRoute
   '/auth/callback': typeof AuthCallbackRoute
 }
 export interface FileRoutesByTo {
@@ -67,8 +81,10 @@ export interface FileRoutesByTo {
   '/auth-error': typeof AuthErrorRoute
   '/hub': typeof HubRoute
   '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
   '/scout': typeof ScoutRoute
   '/signup': typeof SignupRoute
+  '/terms': typeof TermsRoute
   '/auth/callback': typeof AuthCallbackRoute
 }
 export interface FileRoutesById {
@@ -77,8 +93,10 @@ export interface FileRoutesById {
   '/auth-error': typeof AuthErrorRoute
   '/hub': typeof HubRoute
   '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
   '/scout': typeof ScoutRoute
   '/signup': typeof SignupRoute
+  '/terms': typeof TermsRoute
   '/auth/callback': typeof AuthCallbackRoute
 }
 export interface FileRouteTypes {
@@ -88,8 +106,10 @@ export interface FileRouteTypes {
     | '/auth-error'
     | '/hub'
     | '/login'
+    | '/privacy'
     | '/scout'
     | '/signup'
+    | '/terms'
     | '/auth/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -97,8 +117,10 @@ export interface FileRouteTypes {
     | '/auth-error'
     | '/hub'
     | '/login'
+    | '/privacy'
     | '/scout'
     | '/signup'
+    | '/terms'
     | '/auth/callback'
   id:
     | '__root__'
@@ -106,8 +128,10 @@ export interface FileRouteTypes {
     | '/auth-error'
     | '/hub'
     | '/login'
+    | '/privacy'
     | '/scout'
     | '/signup'
+    | '/terms'
     | '/auth/callback'
   fileRoutesById: FileRoutesById
 }
@@ -116,13 +140,22 @@ export interface RootRouteChildren {
   AuthErrorRoute: typeof AuthErrorRoute
   HubRoute: typeof HubRoute
   LoginRoute: typeof LoginRoute
+  PrivacyRoute: typeof PrivacyRoute
   ScoutRoute: typeof ScoutRoute
   SignupRoute: typeof SignupRoute
+  TermsRoute: typeof TermsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/signup': {
       id: '/signup'
       path: '/signup'
@@ -135,6 +168,13 @@ declare module '@tanstack/react-router' {
       path: '/scout'
       fullPath: '/scout'
       preLoaderRoute: typeof ScoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -180,8 +220,10 @@ const rootRouteChildren: RootRouteChildren = {
   AuthErrorRoute: AuthErrorRoute,
   HubRoute: HubRoute,
   LoginRoute: LoginRoute,
+  PrivacyRoute: PrivacyRoute,
   ScoutRoute: ScoutRoute,
   SignupRoute: SignupRoute,
+  TermsRoute: TermsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
 }
 export const routeTree = rootRouteImport
