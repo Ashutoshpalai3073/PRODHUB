@@ -11,7 +11,7 @@ import * as THREE from 'three';
 
 export type HoloKind =
   | 'planet' | 'crystal' | 'binary' | 'cage' | 'rings' | 'gyro' | 'halo' | 'orbit'
-  | 'poly4' | 'poly8' | 'poly12' | 'poly20';
+  | 'poly4' | 'poly8' | 'poly12' | 'poly20' | 'mini';
 
 const SIZE = 160;
 
@@ -68,6 +68,18 @@ function buildScene(kind: HoloKind, colorHex: string): Built {
   let update: (t: number) => void = t => { root.rotation.y = t * 0.5; };
 
   switch (kind) {
+    case 'mini': {
+      // stepper planet: bold enough to read at ~34px
+      camera.position.set(0, 0.25, 3.5);
+      camera.fov = 46; camera.updateProjectionMatrix();
+      root.add(new THREE.Mesh(track(new THREE.SphereGeometry(1.02, 12, 10)), wire(1)));
+      root.add(new THREE.Mesh(track(new THREE.SphereGeometry(0.96, 16, 16)), fill(0.32)));
+      const mring = new THREE.Mesh(track(new THREE.RingGeometry(1.35, 1.85, 40)), flat(0.7));
+      mring.rotation.x = Math.PI / 2.6;
+      root.add(mring);
+      update = t => { root.rotation.y = t * 0.9; mring.rotation.z = t * 0.5; };
+      break;
+    }
     case 'planet': {
       root.add(new THREE.Mesh(track(new THREE.SphereGeometry(1.05, 14, 12)), wire(0.8)));
       root.add(new THREE.Mesh(track(new THREE.SphereGeometry(1.0, 16, 16)), fill()));
@@ -193,10 +205,8 @@ function buildScene(kind: HoloKind, colorHex: string): Built {
   return { scene, camera, update, dispose: () => disposables.forEach(d => d.dispose()) };
 }
 
-// ─── the per-card canvas ──────────────────────────────────────────────────────
-export function CardHolo({ kind, color, size = 104, pos = 'tr' }: { kind: HoloKind; color: string; size?: number; pos?: 'tr' | 'br' }) {
-  const ref = useRef<HTMLCanvasElement | null>(null);
-
+// ─── registration shared by every holo canvas ────────────────────────────────
+function useHoloCanvas(ref: React.RefObject<HTMLCanvasElement | null>, kind: HoloKind, color: string) {
   useEffect(() => {
     const canvas = ref.current;
     if (!canvas) return;
@@ -224,7 +234,13 @@ export function CardHolo({ kind, color, size = 104, pos = 'tr' }: { kind: HoloKi
       built.dispose();
       if (entries.size === 0) { cancelAnimationFrame(rafId); running = false; }
     };
-  }, [kind, color]);
+  }, [ref, kind, color]);
+}
+
+// ─── the per-card corner canvas ──────────────────────────────────────────────
+export function CardHolo({ kind, color, size = 104, pos = 'tr' }: { kind: HoloKind; color: string; size?: number; pos?: 'tr' | 'br' }) {
+  const ref = useRef<HTMLCanvasElement | null>(null);
+  useHoloCanvas(ref, kind, color);
 
   return (
     <canvas
@@ -238,6 +254,26 @@ export function CardHolo({ kind, color, size = 104, pos = 'tr' }: { kind: HoloKi
           ? { top: -Math.round(size * 0.28), right: -Math.round(size * 0.26) }
           : { bottom: -Math.round(size * 0.30), right: -Math.round(size * 0.26) }),
         width: size, height: size, pointerEvents: 'none', opacity: 0.95, zIndex: 0,
+      }}
+    />
+  );
+}
+
+// ─── inline planet for the stage stepper (state-aware: dim / glowing) ────────
+export function MiniPlanet({ color, size = 34, dim = false, glow = false }: { color: string; size?: number; dim?: boolean; glow?: boolean }) {
+  const ref = useRef<HTMLCanvasElement | null>(null);
+  useHoloCanvas(ref, 'mini', color);
+  return (
+    <canvas
+      ref={ref}
+      width={SIZE}
+      height={SIZE}
+      aria-hidden
+      style={{
+        display: 'block', width: size, height: size, pointerEvents: 'none',
+        opacity: dim ? 0.4 : 1,
+        filter: dim ? 'grayscale(0.9) brightness(0.65)' : glow ? `drop-shadow(0 0 7px ${color}aa)` : 'none',
+        transition: 'filter .35s ease, opacity .35s ease',
       }}
     />
   );

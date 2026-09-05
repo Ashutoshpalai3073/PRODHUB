@@ -9,15 +9,16 @@
 // this tab works regardless of anon grants. Every write is guarded server-side;
 // the UI mirrors those rules but never relies on them.
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Landmark, GitBranch, ShieldCheck, Wallet, FlaskConical, BadgeCheck, Rocket,
   FileText, Download, X, Plus, CheckCircle2, AlertTriangle, Lock, Clock4,
-  Building2, Scale, ArrowRight, Send,
+  Building2, Scale, ArrowRight, Send, ChevronDown, Check,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { PathwayCosmos } from './PathwayCosmos';
-import { CardHolo, type HoloKind } from './PathwayHolo';
+import { CardHolo, MiniPlanet, type HoloKind } from './PathwayHolo';
 
 // ─── Types (server payload shapes, kept intentionally loose) ──────────────────
 type Challenge = {
@@ -48,6 +49,9 @@ const C = {
   challenge: '#8b5cf6', screen: '#06b6d4', evaluate: '#a78bfa', sandbox: '#f59e0b',
   contract: '#f472b6', milestone: '#10b981', validate: '#22d3ee', scale: '#34d399',
   danger: '#f87171', dim: 'rgba(255,255,255,0.35)',
+};
+const SOL_STAGE_COLORS: Record<string, string> = {
+  Applied: '#8b5cf6', Screened: '#06b6d4', 'In Pilot': '#f59e0b', Validated: '#10b981', Scaled: '#34d399',
 };
 const DOMAIN_COLORS: Record<string, string> = {
   Water: '#06b6d4', Mobility: '#f59e0b', Health: '#10b981', Agriculture: '#84cc16',
@@ -332,6 +336,47 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{ kind: 'error' | 'ok'; text: string } | null>(null);
 
+  // solution picker (custom dropdown — the native <select> popup cannot be
+  // themed and breaks the interface, especially on phones)
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerPos, setPickerPos] = useState<{ top: number; left: number; width: number } | null>(null);
+  const pickerBtnRef = useRef<HTMLButtonElement | null>(null);
+  const pickerPanelRef = useRef<HTMLDivElement | null>(null);
+  const openPicker = () => {
+    const r = pickerBtnRef.current?.getBoundingClientRect();
+    if (!r) return;
+    const width = Math.min(300, Math.max(r.width, 230), window.innerWidth - 16);
+    const left = Math.min(Math.max(8, r.right - width), window.innerWidth - width - 8);
+    const top = Math.min(r.bottom + 6, Math.max(60, window.innerHeight - 300));
+    setPickerPos({ top, left, width });
+    setPickerOpen(true);
+  };
+  useEffect(() => {
+    if (!pickerOpen) return;
+    const close = () => setPickerOpen(false);
+    const onDown = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (pickerPanelRef.current?.contains(t) || pickerBtnRef.current?.contains(t)) return;
+      close();
+    };
+    const onScroll = (e: Event) => {
+      if (pickerPanelRef.current && e.target instanceof Node && pickerPanelRef.current.contains(e.target)) return;
+      close();
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close(); };
+    document.addEventListener('mousedown', onDown);
+    window.addEventListener('scroll', onScroll, true);
+    window.addEventListener('resize', close);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      window.removeEventListener('scroll', onScroll, true);
+      window.removeEventListener('resize', close);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [pickerOpen]);
+  const selectedSolution = solutions.find(s => s.id === selectedId);
+
   // modals
   const [newChallengeOpen, setNewChallengeOpen] = useState(false);
   const [applyFor, setApplyFor] = useState<Challenge | null>(null);
@@ -489,10 +534,16 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
           {/* selector + stepper */}
           <Card color={accent} style={{ padding: 16 }} holo="gyro" holoPos="br">
             <SectionHead Icon={GitBranch} color={accent} title="Procurement Pathway" tag="ALL 8 STAGES" mb={13}
-              right={<select className="pw-select" value={selectedId} onChange={e => setSelectedId(e.target.value)} style={{ ...inputStyle, width: 'auto', minWidth: 190, padding: '6px 10px', fontSize: 12, marginLeft: 'auto', background: 'rgba(10,10,22,0.9)' }}>
-                {solutions.map(s => <option key={s.id} value={s.id}>{s.name} — {s.stage}</option>)}
-                {solutions.length === 0 && <option value="">No solutions yet</option>}
-              </select>} />
+              right={
+                <button ref={pickerBtnRef} className="pw-select" onClick={() => (pickerOpen ? setPickerOpen(false) : openPicker())}
+                  style={{ ...inputStyle, width: 'auto', minWidth: 200, maxWidth: 280, padding: '7px 12px', fontSize: 12, marginLeft: 'auto', background: 'rgba(10,10,22,0.9)', border: `1px solid ${accent}30`, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', color: 'white' }}>
+                  {selectedSolution && <span style={{ width: 7, height: 7, borderRadius: '50%', background: SOL_STAGE_COLORS[selectedSolution.stage] ?? accent, boxShadow: `0 0 8px ${SOL_STAGE_COLORS[selectedSolution.stage] ?? accent}`, flexShrink: 0 }} />}
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 }}>
+                    {selectedSolution ? selectedSolution.name : 'No solutions yet'}
+                  </span>
+                  <ChevronDown style={{ width: 13, height: 13, color: accent, marginLeft: 'auto', flexShrink: 0, transform: pickerOpen ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }} />
+                </button>
+              } />
             {pathway && (
               <p style={{ fontSize: 11, color: C.dim, margin: '0 0 12px', lineHeight: 1.5 }}>
                 <b style={{ color: 'rgba(255,255,255,.75)' }}>{pathway.startup.name}</b> · {pathway.startup.tagline} — {pathway.startup.founder} · FitScore™ <span className="metric" style={{ color: accent }}>{pathway.startup.pitch_score}</span>
@@ -505,12 +556,19 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
                 return (
                   <div key={s.key} style={{ display: 'flex', alignItems: 'flex-start', flex: 1, minWidth: 74 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, flex: 1 }}>
-                      <div style={{ width: 30, height: 30, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: st === 'done' ? s.color : `${col}14`, border: `1.5px solid ${col}${st === 'todo' ? '' : '90'}`, boxShadow: st !== 'todo' ? `0 0 14px ${s.color}40` : 'none' }}>
-                        {st === 'done' ? <CheckCircle2 style={{ width: 14, height: 14, color: '#04040c' }} /> : <s.Icon style={{ width: 13, height: 13, color: col }} />}
+                      {/* a live 3D planet per stage: gray while pending, lit in the
+                          stage colour once reached, check-badged when complete */}
+                      <div style={{ position: 'relative', width: 34, height: 34 }}>
+                        <MiniPlanet color={s.color} dim={st === 'todo'} glow={st !== 'todo'} />
+                        {st === 'done' && (
+                          <div style={{ position: 'absolute', bottom: -2, right: -4, width: 13, height: 13, borderRadius: '50%', background: s.color, border: '1.5px solid #05050c', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <CheckCircle2 style={{ width: 9, height: 9, color: '#04040c' }} />
+                          </div>
+                        )}
                       </div>
                       <span style={{ fontSize: 8.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: st === 'todo' ? C.dim : s.color, textAlign: 'center' }}>{s.n}. {s.label}</span>
                     </div>
-                    {i < STEPS.length - 1 && <div style={{ height: 1.5, flexShrink: 0, width: 12, marginTop: 15, background: st === 'done' ? s.color : 'rgba(255,255,255,0.1)' }} />}
+                    {i < STEPS.length - 1 && <div style={{ height: 1.5, flexShrink: 0, width: 12, marginTop: 17, background: st === 'done' ? s.color : 'rgba(255,255,255,0.1)' }} />}
                   </div>
                 );
               })}
@@ -766,6 +824,30 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
       {applyFor && <ApplyModal challenge={applyFor} solutions={solutions} userEmail={user?.email ?? ''} busy={busy} onClose={() => setApplyFor(null)} onSubmit={async b => { if (await post('/api/challenges/apply', b, 'Application submitted — eligibility screened, GFR waivers recorded.')) setApplyFor(null); }} />}
       {scoreFor && <ScoreModal busy={busy} onClose={() => setScoreFor(null)} onSubmit={async b => { if (await post('/api/applications/score', { ...b, application_id: scoreFor }, 'Score recorded on the panel rubric.')) setScoreFor(null); }} />}
       {kpiFor && <KpiModal kpi={kpiFor} busy={busy} onClose={() => setKpiFor(null)} onSubmit={async b => { if (await post('/api/kpis/record', { ...b, kpi_id: kpiFor.id }, 'Measurement recorded — verdict computed against the locked target.')) setKpiFor(null); }} />}
+      {/* solution picker panel — portaled to <body>, dark-glass, viewport-clamped */}
+      {pickerOpen && pickerPos && createPortal(
+        <div ref={pickerPanelRef} className="analytics-scroll" role="listbox"
+          style={{ position: 'fixed', top: pickerPos.top, left: pickerPos.left, width: pickerPos.width, maxHeight: 288, overflowY: 'auto', zIndex: 120, background: 'rgba(9,9,18,0.98)', border: `1px solid ${accent}33`, borderTop: `2px solid ${accent}88`, borderRadius: 12, boxShadow: `0 24px 70px rgba(0,0,0,.75), 0 0 40px ${accent}14`, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', padding: 6 }}>
+          {solutions.map(s => {
+            const sel = s.id === selectedId;
+            const sc = SOL_STAGE_COLORS[s.stage] ?? accent;
+            return (
+              <button key={s.id} role="option" aria-selected={sel}
+                onClick={() => { setSelectedId(s.id); setPickerOpen(false); }}
+                style={{ display: 'flex', alignItems: 'center', gap: 9, width: '100%', textAlign: 'left', padding: '9px 10px', borderRadius: 8, border: 'none', cursor: 'pointer', background: sel ? `${accent}1c` : 'transparent', fontFamily: 'inherit' }}
+                onMouseEnter={e => { if (!sel) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.05)'; }}
+                onMouseLeave={e => { if (!sel) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}>
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: sc, boxShadow: `0 0 8px ${sc}`, flexShrink: 0 }} />
+                <span style={{ fontSize: 12, fontWeight: sel ? 700 : 500, color: sel ? 'white' : 'rgba(255,255,255,0.78)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</span>
+                <span style={{ fontSize: 9, fontWeight: 700, color: sc, background: `${sc}14`, border: `1px solid ${sc}30`, padding: '2px 7px', borderRadius: 999, whiteSpace: 'nowrap' }}>{s.stage.toUpperCase()}</span>
+                {sel && <Check style={{ width: 12, height: 12, color: accent, flexShrink: 0 }} />}
+              </button>
+            );
+          })}
+        </div>,
+        document.body,
+      )}
+
       {endorseOpen && pathway && <EndorseModal startupName={pathway.startup.name} busy={busy} onClose={() => setEndorseOpen(false)} onSubmit={async b => { if (await post('/api/endorsements', { ...b, startup_id: pathway.startup.id }, 'Endorsement recorded.')) setEndorseOpen(false); }} />}
 
       {tplOpen && (
