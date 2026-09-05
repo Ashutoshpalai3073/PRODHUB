@@ -1192,7 +1192,7 @@ function ScoutPage() {
                 </div>
 
                 {/* Nav items */}
-                <nav style={{ flex: 1, padding: '12px 8px', display: 'flex', flexDirection: 'column', gap: 2, overflowY: 'auto', position: 'relative', zIndex: 1 }}>
+                <nav className="sidebar-nav-scroll" style={{ flex: 1, padding: '12px 8px', display: 'flex', flexDirection: 'column', gap: 2, overflowY: 'auto', position: 'relative', zIndex: 1 }}>
                     {TABS.map(t => {
                         const Icon = t.icon; const active = tab === t.id;
                         return (
@@ -1415,7 +1415,7 @@ function ScoutPage() {
 
                     {/* ══ CHALLENGE DESK · publish → screen → score → pay → validate → scale ══ */}
                     {tab === 'challenges' && (
-                        <div className="hub-tab-content" style={{ height: '100%', display: 'flex', flexDirection: 'column', padding: '18px 22px', boxSizing: 'border-box', overflow: 'hidden', position: 'relative' }}>
+                        <div className="hub-tab-content pathway-tab-wrap" style={{ height: '100%', display: 'flex', flexDirection: 'column', padding: '18px 22px', boxSizing: 'border-box', overflow: 'hidden', position: 'relative' }}>
                             <div aria-hidden style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
                                 <div style={{ position: 'absolute', top: '-14%', left: '-6%', width: '44%', height: '54%', background: 'radial-gradient(circle, rgba(6,182,212,0.12), transparent 70%)', filter: 'blur(44px)' }} />
                                 <div style={{ position: 'absolute', bottom: '-18%', right: '-8%', width: '46%', height: '52%', background: 'radial-gradient(circle, rgba(139,92,246,0.10), transparent 70%)', filter: 'blur(48px)' }} />

@@ -16,6 +16,7 @@ import {
   Building2, Scale, ArrowRight, Send,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { PathwayCosmos } from './PathwayCosmos';
 
 // ─── Types (server payload shapes, kept intentionally loose) ──────────────────
 type Challenge = {
@@ -64,7 +65,7 @@ function Label({ children }: { children: React.ReactNode }) {
 }
 function Card({ color, children, style }: { color: string; children: React.ReactNode; style?: React.CSSProperties }) {
   return (
-    <div style={{ borderRadius: 16, border: `1px solid ${color}22`, background: `linear-gradient(145deg,${color}09 0%, rgba(5,5,12,0.92) 100%)`, position: 'relative', overflow: 'hidden', ...style }}>
+    <div style={{ borderRadius: 16, border: `1px solid ${color}26`, background: `linear-gradient(145deg,${color}0d 0%, rgba(7,7,16,0.58) 100%)`, backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', position: 'relative', overflow: 'hidden', ...style }}>
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: `linear-gradient(90deg,transparent,${color}60,transparent)` }} />
       {children}
     </div>
@@ -78,7 +79,7 @@ const inputStyle: React.CSSProperties = { width: '100%', boxSizing: 'border-box'
 function Modal({ title, color, onClose, children, wide }: { title: string; color: string; onClose: () => void; children: React.ReactNode; wide?: boolean }) {
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 90, background: 'rgba(2,2,8,0.78)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 18 }}>
-      <div onClick={e => e.stopPropagation()} className="analytics-scroll" style={{ width: '100%', maxWidth: wide ? 760 : 560, maxHeight: '88vh', overflowY: 'auto', borderRadius: 20, border: `1px solid ${color}35`, background: 'linear-gradient(160deg, rgba(14,12,28,0.98), rgba(5,5,12,0.99))', boxShadow: `0 24px 90px rgba(0,0,0,0.7), 0 0 60px ${color}12`, padding: 22 }}>
+      <div onClick={e => e.stopPropagation()} className="analytics-scroll pw-modal" style={{ width: '100%', maxWidth: wide ? 760 : 560, maxHeight: '88vh', overflowY: 'auto', borderRadius: 20, border: `1px solid ${color}35`, background: 'linear-gradient(160deg, rgba(14,12,28,0.98), rgba(5,5,12,0.99))', boxShadow: `0 24px 90px rgba(0,0,0,0.7), 0 0 60px ${color}12`, padding: 22 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
           <span style={{ width: 8, height: 8, borderRadius: '50%', background: color, boxShadow: `0 0 10px ${color}` }} />
           <h3 style={{ fontSize: 15, fontWeight: 800, color: 'white', margin: 0, letterSpacing: '-.01em' }}>{title}</h3>
@@ -359,7 +360,11 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
   const openChallenges = challenges.filter(c => c.status === 'published' || c.status === 'evaluating');
 
   return (
-    <div className="analytics-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14, position: 'relative', zIndex: 2, paddingRight: 2 }}>
+    <div style={{ flex: 1, minHeight: 0, position: 'relative', overflow: 'hidden', borderRadius: 18 }}>
+      {/* the star-sea lives behind everything; content scrolls above it */}
+      <PathwayCosmos accent={accent} />
+      <div aria-hidden style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse at 50% 10%, rgba(5,5,12,0) 45%, rgba(5,5,12,0.5) 100%)' }} />
+      <div className="analytics-scroll pathway-scroll" style={{ position: 'relative', zIndex: 1, height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14, paddingRight: 2 }}>
 
       {/* ── KPI strip ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, flexShrink: 0 }}>
@@ -408,7 +413,7 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
                 const dc = DOMAIN_COLORS[ch.domain] ?? C.challenge;
                 const dLeft = daysUntil(ch.closes_on);
                 return (
-                  <div key={ch.id} onClick={() => setDetail(ch)} style={{ borderRadius: 13, border: `1px solid ${dc}20`, background: `linear-gradient(135deg,${dc}0a, rgba(4,4,12,.9))`, padding: '11px 13px', cursor: 'pointer' }}>
+                  <div key={ch.id} onClick={() => setDetail(ch)} style={{ borderRadius: 13, border: `1px solid ${dc}24`, background: `linear-gradient(135deg,${dc}0c, rgba(4,4,12,.6))`, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', padding: '11px 13px', cursor: 'pointer' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 5, flexWrap: 'wrap' }}>
                       <span className="metric" style={{ fontSize: 9, color: dc, fontWeight: 600 }}>{ch.reference_no}</span>
                       <Pill text={ch.domain} color={dc} />
@@ -464,7 +469,7 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 13 }}>
               <GitBranch style={{ width: 14, height: 14, color: accent }} />
               <span style={{ fontSize: 13, fontWeight: 800, color: 'white' }}>Procurement Pathway</span>
-              <select value={selectedId} onChange={e => setSelectedId(e.target.value)} style={{ ...inputStyle, width: 'auto', minWidth: 190, padding: '6px 10px', fontSize: 12, marginLeft: 'auto', background: 'rgba(10,10,22,0.9)' }}>
+              <select className="pw-select" value={selectedId} onChange={e => setSelectedId(e.target.value)} style={{ ...inputStyle, width: 'auto', minWidth: 190, padding: '6px 10px', fontSize: 12, marginLeft: 'auto', background: 'rgba(10,10,22,0.9)' }}>
                 {solutions.map(s => <option key={s.id} value={s.id}>{s.name} — {s.stage}</option>)}
                 {solutions.length === 0 && <option value="">No solutions yet</option>}
               </select>
@@ -624,7 +629,7 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
                         )}
                       </div>
                       {isDept && m.status !== 'released' && (
-                        <div style={{ display: 'flex', gap: 6, marginTop: 9 }}>
+                        <div style={{ display: 'flex', gap: 6, marginTop: 9, flexWrap: 'wrap' }}>
                           {m.status !== 'verified' && <Btn color={C.screen} disabled={busy} onClick={() => post('/api/milestones/verify', { milestone_id: m.id }, `Tranche ${m.seq} verified.`)}>Verify</Btn>}
                           <Btn color={C.milestone} disabled={busy || !m.verified_at} onClick={() => post('/api/milestones/release', { milestone_id: m.id }, `Tranche ${m.seq} released — ${fmtL(m.amount_inr)}.`)}>Release ₹</Btn>
                         </div>
@@ -715,8 +720,19 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
         </div>
       </div>
 
-      {/* responsive: collapse the two columns on narrow screens */}
-      <style>{`@media (max-width: 900px){ .pathway-cols{ grid-template-columns: 1fr !important; } }`}</style>
+      {/* responsive rules: column collapse, modal + form behaviour on phones */}
+      <style>{`
+        @media (max-width: 900px){ .pathway-cols{ grid-template-columns: 1fr !important; } }
+        .pathway-stepper{ scrollbar-width: none; }
+        .pathway-stepper::-webkit-scrollbar{ display: none; }
+        .pw-grid2{ display: grid; grid-template-columns: 1fr 1fr; }
+        @media (max-width: 640px){
+          .pw-grid2{ grid-template-columns: 1fr; }
+          .pw-modal{ max-width: 100% !important; padding: 14px !important; max-height: 94vh !important; border-radius: 14px !important; }
+          .pw-select{ width: 100% !important; margin-left: 0 !important; min-width: 0 !important; }
+          .pathway-scroll{ gap: 10px !important; }
+        }
+      `}</style>
 
       {/* ════ MODALS ════ */}
       {detail && (
@@ -760,6 +776,7 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
           </div>
         </Modal>
       )}
+      </div>
     </div>
   );
 }
@@ -770,7 +787,7 @@ function NewChallengeModal({ onClose, onSubmit, busy }: { onClose: () => void; o
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setF(p => ({ ...p, [k]: e.target.value }));
   return (
     <Modal title="Publish a Challenge — Problem Statement Template" color={C.challenge} onClose={onClose} wide>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 11 }}>
+      <div className="pw-grid2" style={{ gap: 11 }}>
         <Field span label="Title *"><input style={inputStyle} placeholder="e.g. Reduce non-revenue water in Zone 4" value={String(f.title ?? '')} onChange={set('title')} /></Field>
         <Field span label="Operational pain point *"><textarea style={{ ...inputStyle, minHeight: 56, resize: 'vertical' }} placeholder="Describe the problem as experienced — not the product imagined." value={String(f.problem_statement ?? '')} onChange={set('problem_statement')} /></Field>
         <Field span label="Outcome sought *"><textarea style={{ ...inputStyle, minHeight: 44, resize: 'vertical' }} placeholder="What does 'solved' look like in operations?" value={String(f.outcome_sought ?? '')} onChange={set('outcome_sought')} /></Field>
@@ -826,7 +843,7 @@ function ApplyModal({ challenge, solutions, busy, onClose, onSubmit }: { challen
       <Field label="Proposal summary * (this is what the panel scores)">
         <textarea style={{ ...inputStyle, minHeight: 84, resize: 'vertical' }} placeholder="What you will deploy, where, and how it reaches the target metric…" value={summary} onChange={e => setSummary(e.target.value)} />
       </Field>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
+      <div className="pw-grid2" style={{ gap: 10, marginTop: 10 }}>
         <Field label={`Proposed budget ₹ (cap ${fmtL(challenge.pilot_budget_inr)})`}><input style={inputStyle} type="number" value={budget} onChange={e => setBudget(e.target.value)} /></Field>
         <Field label="Proposed duration (days)"><input style={inputStyle} type="number" value={days} onChange={e => setDays(e.target.value)} /></Field>
       </div>
@@ -850,7 +867,7 @@ function ScoreModal({ busy, onClose, onSubmit }: { busy: boolean; onClose: () =>
   return (
     <Modal title="Panel Score — dual-axis rubric" color={C.evaluate} onClose={onClose}>
       <p style={{ fontSize: 10.5, color: C.dim, margin: '0 0 12px', lineHeight: 1.55 }}>Score each axis 0–50 against the published rubric. Your score is stored attributably with your rationale — an averaged number with no author cannot be defended on audit.</p>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+      <div className="pw-grid2" style={{ gap: 10 }}>
         <Field label="Technical viability (0–50)"><input style={inputStyle} type="number" min={0} max={50} value={tech} onChange={e => setTech(e.target.value)} /></Field>
         <Field label="Innovation quotient (0–50)"><input style={inputStyle} type="number" min={0} max={50} value={innov} onChange={e => setInnov(e.target.value)} /></Field>
       </div>
@@ -880,7 +897,7 @@ function KpiModal({ kpi, busy, onClose, onSubmit }: { kpi: Pathway['kpis'][numbe
       </div>
       <Banner kind="ok" text={`Target locked ${fmtDate(kpi.locked_at)} — before measurement began. The verdict is computed against it; the validator supplies only the number.`} />
       <Field label={`Measured value * (${kpi.unit ?? ''})`}><input style={inputStyle} type="number" step="any" value={measured} onChange={e => setMeasured(e.target.value)} /></Field>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
+      <div className="pw-grid2" style={{ gap: 10, marginTop: 10 }}>
         <Field label="Validating organisation *"><input style={inputStyle} placeholder="e.g. VJTI Assessment Cell" value={org} onChange={e => setOrg(e.target.value)} /></Field>
         <Field label="Validator type">
           <select style={inputStyle} value={vtype} onChange={e => setVtype(e.target.value)}>

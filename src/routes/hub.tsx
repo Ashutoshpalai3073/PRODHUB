@@ -1744,7 +1744,7 @@ function HubPage() {
           </div>
         </div>
 
-        <nav className="flex-1 p-3 flex flex-col gap-0.5 overflow-y-auto">
+        <nav className="sidebar-nav-scroll flex-1 p-3 flex flex-col gap-0.5 overflow-y-auto">
           {navItems.map(item => {
             const Icon = item.icon;
             const active = tab === item.id;
@@ -1933,7 +1933,7 @@ function HubPage() {
 
           {/* ── CHALLENGE BOARD · the 8-stage procurement pathway ─────────── */}
           {tab === 'challenges' && (
-            <div className="hub-main-content" style={{ position: 'relative', height: '100%', display: 'flex', flexDirection: 'column', padding: '20px 28px', boxSizing: 'border-box', overflow: 'hidden' }}>
+            <div className="hub-main-content pathway-tab-wrap" style={{ position: 'relative', height: '100%', display: 'flex', flexDirection: 'column', padding: '20px 28px', boxSizing: 'border-box', overflow: 'hidden' }}>
               <div aria-hidden style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', top: '-16%', left: '-8%', width: '46%', height: '58%', background: 'radial-gradient(circle, rgba(139,92,246,0.14), transparent 70%)', filter: 'blur(44px)' }} />
                 <div style={{ position: 'absolute', bottom: '-20%', right: '-6%', width: '48%', height: '54%', background: 'radial-gradient(circle, rgba(16,185,129,0.10), transparent 70%)', filter: 'blur(48px)' }} />
