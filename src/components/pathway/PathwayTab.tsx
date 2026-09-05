@@ -391,7 +391,7 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
       {/* the star-sea lives behind everything; content scrolls above it */}
       <PathwayCosmos accent={accent} />
       <div aria-hidden style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse at 50% 10%, rgba(5,5,12,0) 45%, rgba(5,5,12,0.5) 100%)' }} />
-      <div className="analytics-scroll pathway-scroll" style={{ position: 'relative', zIndex: 1, height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14, paddingRight: 2 }}>
+      <div className="pathway-scroll" style={{ position: 'relative', zIndex: 1, height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: 14 }}>
 
       {/* ── KPI strip ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, flexShrink: 0 }}>
@@ -417,11 +417,12 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
       {notice && <div style={{ flexShrink: 0 }}><Banner kind={notice.kind} text={notice.text} /></div>}
 
       {/* ── Two-column body ── */}
-      <div className="pathway-cols" style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 380px) 1fr', gap: 14, alignItems: 'start' }}>
+      {/* rigid frame: the page never scrolls — each column scrolls inside a
+          shared grid row, so both columns start and end on the same lines */}
+      <div className="pathway-cols" style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 380px) 1fr', gap: 14, flex: 1, minHeight: 0 }}>
 
-        {/* ══ LEFT: challenge board + templates — sticky, so the column never
-               leaves a hole beside the (much taller) pathway column ══ */}
-        <div className="analytics-scroll pathway-left" style={{ display: 'flex', flexDirection: 'column', gap: 12, position: 'sticky', top: 0, alignSelf: 'start', maxHeight: 'calc(100dvh - 215px)', overflowY: 'auto', paddingRight: 2 }}>
+        {/* ══ LEFT: challenge board + templates — its own scroll lane ══ */}
+        <div className="analytics-scroll pathway-left" style={{ display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0, overflowY: 'auto', paddingRight: 2 }}>
           <Card color={C.challenge} style={{ padding: 16 }} holo="planet" holoPos="br">
             <SectionHead Icon={Landmark} color={C.challenge} title="Challenge Board" tag="STAGE 1" mb={12}
               right={isDept ? <button onClick={() => setNewChallengeOpen(true)} style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 999, fontSize: 10.5, fontWeight: 700, color: 'white', background: `linear-gradient(90deg,${C.challenge},#6d28d9)`, border: 'none', cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 4px 16px ${C.challenge}44` }}><Plus style={{ width: 11, height: 11 }} />New Challenge</button> : undefined} />
@@ -482,8 +483,8 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
           </Card>
         </div>
 
-        {/* ══ RIGHT: the pathway for one solution ══ */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
+        {/* ══ RIGHT: the pathway for one solution — its own scroll lane ══ */}
+        <div className="analytics-scroll pathway-right" style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0, minHeight: 0, overflowY: 'auto', paddingRight: 2 }}>
 
           {/* selector + stepper */}
           <Card color={accent} style={{ padding: 16 }} holo="gyro" holoPos="br">
@@ -721,8 +722,8 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
       {/* responsive rules: column collapse, modal + form behaviour on phones */}
       <style>{`
         @media (max-width: 900px){
-          .pathway-cols{ grid-template-columns: 1fr !important; }
-          .pathway-left{ position: static !important; max-height: none !important; overflow: visible !important; }
+          .pathway-cols{ grid-template-columns: 1fr !important; overflow-y: auto !important; }
+          .pathway-left, .pathway-right{ overflow: visible !important; min-height: auto !important; }
         }
         .pathway-stepper{ scrollbar-width: none; }
         .pathway-stepper::-webkit-scrollbar{ display: none; }
