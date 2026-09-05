@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { PathwayCosmos } from './PathwayCosmos';
+import { CardHolo, type HoloKind } from './PathwayHolo';
 
 // ─── Types (server payload shapes, kept intentionally loose) ──────────────────
 type Challenge = {
@@ -63,12 +64,14 @@ function Pill({ text, color, solid = false }: { text: string; color: string; sol
 function Label({ children }: { children: React.ReactNode }) {
   return <p style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.28)', textTransform: 'uppercase', letterSpacing: '.09em', margin: '0 0 4px' }}>{children}</p>;
 }
-function Card({ color, children, style }: { color: string; children: React.ReactNode; style?: React.CSSProperties }) {
+function Card({ color, children, style, holo, holoPos }: { color: string; children: React.ReactNode; style?: React.CSSProperties; holo?: HoloKind; holoPos?: 'tr' | 'br' }) {
   return (
     <div style={{ borderRadius: 16, border: `1px solid ${color}26`, background: `radial-gradient(circle at 88% -12%, ${color}16, transparent 55%), linear-gradient(145deg,${color}0d 0%, rgba(7,7,16,0.58) 100%)`, backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', position: 'relative', overflow: 'hidden', ...style }}>
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: `linear-gradient(90deg,transparent,${color}60,transparent)` }} />
+      {/* live WebGL object on the card corner (shared-renderer, cheap) */}
+      {holo && <CardHolo kind={holo} color={color} pos={holoPos} />}
       {/* orbital ornament — a small ringed system sitting on the card corner */}
-      <div aria-hidden style={{ position: 'absolute', top: -38, right: -38, width: 128, height: 128, pointerEvents: 'none', opacity: 0.6 }}>
+      <div aria-hidden style={{ position: 'absolute', top: -38, right: -38, width: 128, height: 128, pointerEvents: 'none', opacity: holo ? 0.35 : 0.6 }}>
         <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: `1px solid ${color}30` }} />
         <div style={{ position: 'absolute', inset: 19, borderRadius: '50%', border: `1px dashed ${color}24` }} />
         <div style={{ position: 'absolute', inset: 38, borderRadius: '50%', border: `1px solid ${color}1a`, background: `radial-gradient(circle at 35% 35%, ${color}22, transparent 65%)` }} />
@@ -397,8 +400,8 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
           { label: 'Solutions on Pathway', val: String(solutions.length), sub: 'verified & live', color: C.screen, Icon: GitBranch },
           { label: 'Released via Milestones', val: fmtL(solutions.reduce((a, s) => a + (s.raised || 0), 0)), sub: 'against verified gates', color: C.milestone, Icon: Wallet },
           { label: 'Scale-Up Gates Open', val: String(solutions.filter(s => s.stage === 'Scaled').length), sub: '3+ dept endorsements', color: C.scale, Icon: Rocket },
-        ].map(k => (
-          <Card key={k.label} color={k.color} style={{ padding: '13px 16px' }}>
+        ].map((k, i) => (
+          <Card key={k.label} color={k.color} style={{ padding: '13px 16px' }} holo={(['poly4', 'poly8', 'poly12', 'poly20'] as const)[i]}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <Label>{k.label}</Label>
@@ -419,7 +422,7 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
         {/* ══ LEFT: challenge board + templates — sticky, so the column never
                leaves a hole beside the (much taller) pathway column ══ */}
         <div className="analytics-scroll pathway-left" style={{ display: 'flex', flexDirection: 'column', gap: 12, position: 'sticky', top: 0, alignSelf: 'start', maxHeight: 'calc(100dvh - 215px)', overflowY: 'auto', paddingRight: 2 }}>
-          <Card color={C.challenge} style={{ padding: 16 }}>
+          <Card color={C.challenge} style={{ padding: 16 }} holo="planet" holoPos="br">
             <SectionHead Icon={Landmark} color={C.challenge} title="Challenge Board" tag="STAGE 1" mb={12}
               right={isDept ? <button onClick={() => setNewChallengeOpen(true)} style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 999, fontSize: 10.5, fontWeight: 700, color: 'white', background: `linear-gradient(90deg,${C.challenge},#6d28d9)`, border: 'none', cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 4px 16px ${C.challenge}44` }}><Plus style={{ width: 11, height: 11 }} />New Challenge</button> : undefined} />
             {loading && <p style={{ fontSize: 12, color: C.dim }}>Loading challenges…</p>}
@@ -460,7 +463,7 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
           </Card>
 
           {/* Templates library — the three documents the problem statement demands */}
-          <Card color={C.contract} style={{ padding: 16 }}>
+          <Card color={C.contract} style={{ padding: 16 }} holo="crystal">
             <SectionHead Icon={FileText} color={C.contract} title="Standard Templates" tag="MANDATED · 3" />
             {[
               { key: 'problem' as const, name: 'Problem Statement Template', sub: 'Baseline–target matrix · sandbox parameters · security checklist', color: C.challenge },
@@ -483,7 +486,7 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
 
           {/* selector + stepper */}
-          <Card color={accent} style={{ padding: 16 }}>
+          <Card color={accent} style={{ padding: 16 }} holo="gyro" holoPos="br">
             <SectionHead Icon={GitBranch} color={accent} title="Procurement Pathway" tag="ALL 8 STAGES" mb={13}
               right={<select className="pw-select" value={selectedId} onChange={e => setSelectedId(e.target.value)} style={{ ...inputStyle, width: 'auto', minWidth: 190, padding: '6px 10px', fontSize: 12, marginLeft: 'auto', background: 'rgba(10,10,22,0.9)' }}>
                 {solutions.map(s => <option key={s.id} value={s.id}>{s.name} — {s.stage}</option>)}
@@ -515,7 +518,7 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
 
           {pathway && (<>
             {/* ── Stage 2/3: application + panel ── */}
-            <Card color={C.evaluate} style={{ padding: 16 }}>
+            <Card color={C.evaluate} style={{ padding: 16 }} holo="binary">
               <SectionHead Icon={Scale} color={C.evaluate} title="Application & Panel Evaluation" tag="STAGES 2–3" />
               {pathway.applications.length === 0 && <p style={{ fontSize: 11.5, color: C.dim, margin: 0 }}>No application yet — {mode === 'startup' ? 'apply to a challenge from the board on the left.' : 'this solution has not applied to any challenge.'}</p>}
               {pathway.applications.map(app => (
@@ -565,7 +568,7 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
             </Card>
 
             {/* ── Stage 4/5: sandbox + contract ── */}
-            <Card color={C.sandbox} style={{ padding: 16 }}>
+            <Card color={C.sandbox} style={{ padding: 16 }} holo="cage">
               <SectionHead Icon={FlaskConical} color={C.sandbox} title="Governed Sandbox & Contract" tag="STAGES 4–5" />
               {pathway.sandboxes.length === 0 && <p style={{ fontSize: 11.5, color: C.dim, margin: 0 }}>No sandbox agreement yet. One opens after evaluation — with a fixed exit date, security clearance, and IP retained by the startup.</p>}
               {pathway.sandboxes.map(sb => {
@@ -604,7 +607,7 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
             </Card>
 
             {/* ── Stage 6: milestones ── */}
-            <Card color={C.milestone} style={{ padding: 16 }}>
+            <Card color={C.milestone} style={{ padding: 16 }} holo="rings">
               <SectionHead Icon={Wallet} color={C.milestone} title="Milestone Payments" tag="STAGE 6" mb={4}
                 right={<span className="metric" style={{ marginLeft: 'auto', fontSize: 12, color: C.milestone, background: `${C.milestone}10`, border: `1px solid ${C.milestone}2e`, padding: '3px 10px', borderRadius: 999 }}>{fmtL(releasedTotal)} released</span>} />
               <p style={{ fontSize: 10, color: C.dim, margin: '0 0 12px', lineHeight: 1.5 }}>30% mobilisation advance (GFR Rule 172 ceiling) → 40% mid-term KPI demo → 30% independent validation. MSMED s.15: release within 45 days of verification — the clock below is that rule made visible.</p>
@@ -644,7 +647,7 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
             </Card>
 
             {/* ── Stage 7: validation ── */}
-            <Card color={C.validate} style={{ padding: 16 }}>
+            <Card color={C.validate} style={{ padding: 16 }} holo="orbit">
               <SectionHead Icon={ShieldCheck} color={C.validate} title="Independent Validation" tag="STAGE 7" mb={4} />
               <p style={{ fontSize: 10, color: C.dim, margin: '0 0 12px', lineHeight: 1.5 }}>Targets are locked before measurement begins (pre-registration) — nobody moves the goalposts, in either direction. The validator supplies the measurement; the verdict is computed against the locked target.</p>
               {pathway.kpis.length === 0 && <p style={{ fontSize: 11.5, color: C.dim, margin: 0 }}>KPIs are locked in from the challenge's baseline–target matrix when the pilot starts.</p>}
@@ -674,7 +677,7 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
             </Card>
 
             {/* ── Stage 8: scale-up gate ── */}
-            <Card color={C.scale} style={{ padding: 16 }}>
+            <Card color={C.scale} style={{ padding: 16 }} holo="halo" holoPos="br">
               <SectionHead Icon={Rocket} color={C.scale} title="Scale-Up Gate" tag="STAGE 8" note="unlocks on 3 satisfactory departmental reports (Odisha model)"
                 right={isDept ? <span style={{ marginLeft: 'auto' }}><Btn color={C.scale} ghost onClick={() => setEndorseOpen(true)}>Endorse pilot</Btn></span> : undefined} />
               <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', marginBottom: 12 }}>
