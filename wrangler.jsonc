@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "incutrack",
+  "name": "sanyog",
   "compatibility_date": "2025-09-24",
   "compatibility_flags": ["nodejs_compat"],
   "main": "src/server.ts",
@@ -12,9 +12,9 @@
     "tanstack-start-injected-head-scripts:v": "./dist/server/assets/start-Dnz_VIpV.js"
   },
   "vars": {
-    "SUPABASE_URL": "https://kntoyozitskrblvxmbpp.supabase.co",
-    "VITE_SUPABASE_URL": "https://kntoyozitskrblvxmbpp.supabase.co",
-    "GOOGLE_CLIENT_ID": "54247305152-ifijvdsu0rknflkl2blg945a50p7b3pq.apps.googleusercontent.com",
-    "FRONTEND_URL": "https://incutrack.ashutosh-palai2005.workers.dev"
+    "SUPABASE_URL": "https://ecduzzzvyfesegsyuens.supabase.co",
+    "VITE_SUPABASE_URL": "https://ecduzzzvyfesegsyuens.supabase.co",
+    "GOOGLE_CLIENT_ID": "751693881682-5slo7l5b35hobfj63ms10ihrhsjsjnnp.apps.googleusercontent.com",
+    "FRONTEND_URL": "https://sanyog.ashutosh-palai2005.workers.dev"
   }
 }

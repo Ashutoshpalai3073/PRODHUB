@@ -160,7 +160,7 @@ export function Navbar() {
           <>
             <button
               onClick={() => navigate({ to: '/login' })}
-              style={{ padding: '7px 16px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.18s ease' }}
+              style={{ whiteSpace: 'nowrap', flexShrink: 0, padding: '7px 16px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.18s ease' }}
               onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.1)')}
               onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
             >
@@ -168,7 +168,7 @@ export function Navbar() {
             </button>
             <button
               onClick={() => navigate({ to: '/signup' })}
-              style={{ padding: '7px 16px', borderRadius: 8, background: 'linear-gradient(90deg,#7c3aed,#0ea5e9)', border: 'none', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', boxShadow: '0 2px 12px rgba(124,58,237,0.3)', transition: 'all 0.18s ease' }}
+              style={{ whiteSpace: 'nowrap', flexShrink: 0, padding: '7px 16px', borderRadius: 8, background: 'linear-gradient(90deg,#7c3aed,#0ea5e9)', border: 'none', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', boxShadow: '0 2px 12px rgba(124,58,237,0.3)', transition: 'all 0.18s ease' }}
               onMouseEnter={e => (e.currentTarget.style.opacity = '0.9')}
               onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
             >

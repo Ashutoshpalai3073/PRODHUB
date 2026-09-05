@@ -1797,7 +1797,7 @@ function Index() {
           <Spotlight className="-top-40 left-0 md:left-60 md:-top-20" fill="white" />
           {!dustDone && <DustCanvas heroRef={heroRef} onDone={() => setDustDone(true)} />}
 
-          <nav className="lp-hero-nav relative z-20 flex items-center justify-between px-6 md:px-16 py-7" style={{ flexWrap: 'nowrap' }}>
+          <nav className="lp-hero-nav relative z-20 flex items-center justify-between px-4 md:px-16 py-7" style={{ flexWrap: 'nowrap' }}>
             <button type="button" onClick={() => navigateToSection(-1)} className="lp-hero-logo flex items-center gap-2.5 text-sm font-semibold tracking-widest uppercase" style={{ background: 'none', border: 'none', padding: 0, color: 'inherit', cursor: 'pointer' }}>
               <span className="inline-block h-2 w-2 rounded-full bg-violet-400 shadow-[0_0_12px_2px_rgba(167,139,250,0.8)]" />
               Sanyog
@@ -1834,7 +1834,7 @@ function Index() {
                 <svg width="8" height="8" viewBox="0 0 9 9" fill="none" style={{ opacity: 0.5, flexShrink: 0 }}><path d="M1 8L8 1M8 1H3M8 1V6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </a>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {/* Drusti ecosystem pill — desktop only */}
               <a
                 href="https://drusti.vercel.app/"
@@ -1905,8 +1905,8 @@ function Index() {
                 </div>
               ) : (
                 <>
-                  <button onClick={() => navigate({ to: '/login' })} style={{ padding: '7px 16px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.18s ease' }} onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.1)')} onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}>Log In</button>
-                  <button onClick={() => navigate({ to: '/signup' })} style={{ padding: '7px 16px', borderRadius: 8, background: 'linear-gradient(90deg,#7c3aed,#0ea5e9)', border: 'none', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', boxShadow: '0 2px 12px rgba(124,58,237,0.3)', transition: 'all 0.18s ease' }} onMouseEnter={e => (e.currentTarget.style.opacity = '0.9')} onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>Sign Up</button>
+                  <button onClick={() => navigate({ to: '/login' })} style={{ whiteSpace: 'nowrap', flexShrink: 0, padding: '7px 16px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.18s ease' }} onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.1)')} onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}>Log In</button>
+                  <button onClick={() => navigate({ to: '/signup' })} style={{ whiteSpace: 'nowrap', flexShrink: 0, padding: '7px 16px', borderRadius: 8, background: 'linear-gradient(90deg,#7c3aed,#0ea5e9)', border: 'none', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', boxShadow: '0 2px 12px rgba(124,58,237,0.3)', transition: 'all 0.18s ease' }} onMouseEnter={e => (e.currentTarget.style.opacity = '0.9')} onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>Sign Up</button>
                 </>
               )}
             </div>
