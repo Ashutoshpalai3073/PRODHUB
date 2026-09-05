@@ -11,9 +11,10 @@ import {
     Filter, Star, Building2, Activity, Wallet, CheckCircle,
     ChevronRight, Target, Telescope, Eye, Download, MessageSquare, FileText,
     Globe, Lock, UserPlus, Bookmark, Send, MoreHorizontal,
-    Award, Zap, Shield, PieChart, Trash2, Check
+    Award, Zap, Shield, PieChart, Trash2, Check, Landmark
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { PathwayTab } from '../components/pathway/PathwayTab';
 
 export const Route = createFileRoute('/scout')({
     component: ScoutPage,
@@ -912,18 +913,20 @@ function ScoutPage() {
         return () => { alive = false; };
     }, []);
 
-    // Load live Corporate Pitch Decks (deck_type = 'investor') from the shared documents table.
-    // Founders upload these via the Explore Hub Brand Vault → they surface in this diligence room.
+    // Load live Corporate Pitch Decks (deck_type = 'investor').
+    // These are CONFIDENTIAL, so they are never readable with the anon key
+    // (column grants + RLS in 06_public_read_access.sql make that query return
+    // zero rows by design). Instead we call the server's guarded route, which
+    // verifies the caller is an approved department (or admin) before releasing
+    // rows via the service-role client.
     useEffect(() => {
         let alive = true;
         (async () => {
             try {
-                const { data, error } = await supabase
-                    .from('documents')
-                    .select('*')
-                    .eq('deck_type', 'investor')
-                    .order('created_at', { ascending: false });
-                if (!alive || error || !data?.length) return;
+                const res = await fetch('/api/documents/confidential', { credentials: 'include' });
+                if (!res.ok) return; // 401/403 → not an approved department; keep demo seed
+                const data = await res.json();
+                if (!alive || !Array.isArray(data) || !data.length) return;
                 const liveDocs = data
                     .filter((row: any) => row.startup_name) // must be linked to a startup to show under it
                     .map(mapInvestorDoc);
@@ -1083,6 +1086,7 @@ function ScoutPage() {
         // NOTE: tab ids are load-bearing (routing, deep links, chatbot context in
         // src/lib/knowledge.ts). Only the labels change.
         { id: 'cockpit', label: 'Procurement Cockpit', icon: LayoutDashboard },
+        { id: 'challenges', label: 'Challenge Desk', icon: Landmark },
         { id: 'dealflow', label: 'Challenge Pipeline', icon: GitBranch },
         { id: 'diligence', label: 'Evaluation Room', icon: FolderKey },
         { id: 'network', label: 'Startup Network', icon: Users },
@@ -1408,6 +1412,17 @@ function ScoutPage() {
                 </header>
 
                 <main className="hub-main-content" style={{ flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' }}>
+
+                    {/* ══ CHALLENGE DESK · publish → screen → score → pay → validate → scale ══ */}
+                    {tab === 'challenges' && (
+                        <div className="hub-tab-content" style={{ height: '100%', display: 'flex', flexDirection: 'column', padding: '18px 22px', boxSizing: 'border-box', overflow: 'hidden', position: 'relative' }}>
+                            <div aria-hidden style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+                                <div style={{ position: 'absolute', top: '-14%', left: '-6%', width: '44%', height: '54%', background: 'radial-gradient(circle, rgba(6,182,212,0.12), transparent 70%)', filter: 'blur(44px)' }} />
+                                <div style={{ position: 'absolute', bottom: '-18%', right: '-8%', width: '46%', height: '52%', background: 'radial-gradient(circle, rgba(139,92,246,0.10), transparent 70%)', filter: 'blur(48px)' }} />
+                            </div>
+                            <PathwayTab mode="department" />
+                        </div>
+                    )}
 
                     {/* ══ 1. INVESTMENT COCKPIT ══ */}
                     {tab === 'cockpit' && (() => {

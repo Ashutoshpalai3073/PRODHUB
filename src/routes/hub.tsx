@@ -11,8 +11,9 @@ import {
   Plus, X, Edit3, Save, Search, ArrowRight, Bell, TrendingUp, DollarSign,
   Award, Clock, Filter, Star, Building2, Activity, Rocket,
   Shield, Lightbulb, Wallet, Upload, CheckCircle, Briefcase,
-  ChevronRight, MoreHorizontal, Globe, Zap, Target, Lock, Eye, EyeOff, Key, UserCheck, AlertTriangle, Telescope, MessageSquare, Pencil, Trash2, FileText
+  ChevronRight, MoreHorizontal, Globe, Zap, Target, Lock, Eye, EyeOff, Key, UserCheck, AlertTriangle, Telescope, MessageSquare, Pencil, Trash2, FileText, Landmark
 } from 'lucide-react';
+import { PathwayTab } from '../components/pathway/PathwayTab';
 
 export const Route = createFileRoute('/hub')({
   component: HubPage,
@@ -1668,6 +1669,7 @@ function HubPage() {
     // NOTE: tab ids are load-bearing (routing, ?tab= deep links, chatbot context
     // in src/lib/knowledge.ts). Only the labels change.
     { id: 'overview', label: 'Command Centre', icon: LayoutDashboard },
+    { id: 'challenges', label: 'Challenge Board', icon: Landmark },
     { id: 'pipeline', label: 'Pilot Pipeline', icon: GitBranch },
     { id: 'vault', label: 'Solution Vault', icon: FolderKey },
     { id: 'network', label: 'Expert Network', icon: Users },
@@ -1928,6 +1930,17 @@ function HubPage() {
         </header>
 
         <main className="flex-1 overflow-y-auto">
+
+          {/* ── CHALLENGE BOARD · the 8-stage procurement pathway ─────────── */}
+          {tab === 'challenges' && (
+            <div className="hub-main-content" style={{ position: 'relative', height: '100%', display: 'flex', flexDirection: 'column', padding: '20px 28px', boxSizing: 'border-box', overflow: 'hidden' }}>
+              <div aria-hidden style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', top: '-16%', left: '-8%', width: '46%', height: '58%', background: 'radial-gradient(circle, rgba(139,92,246,0.14), transparent 70%)', filter: 'blur(44px)' }} />
+                <div style={{ position: 'absolute', bottom: '-20%', right: '-6%', width: '48%', height: '54%', background: 'radial-gradient(circle, rgba(16,185,129,0.10), transparent 70%)', filter: 'blur(48px)' }} />
+              </div>
+              <PathwayTab mode="startup" />
+            </div>
+          )}
 
           {/* ── COMMAND CENTER ────────────────────────────────────────────── */}
           {tab === 'overview' && (

@@ -105,18 +105,22 @@ VALUES
    'Buses bunch on the four busiest routes; depot managers only learn of it from passenger complaints, hours after the fact.',
    'Give depot control live occupancy and bunching alerts so headway can be corrected during the service day.',
    'Mobility','On-time departures', 61, 80, '% of scheduled departures','increase',
+   -- Window dates are RELATIVE so the demo stays live whenever it is run:
+   -- recently closed → the panel is evaluating.
    180,'No modification to existing ticketing hardware. Retrofit only.',
    'Depot schedules; 12 months of trip logs; existing GPS feed where fitted.',
-   1500000, 180, DATE '2026-02-01', DATE '2026-03-05','evaluating', TIMESTAMPTZ '2026-02-01 10:00+05:30'),
+   1500000, 180, CURRENT_DATE - 40, CURRENT_DATE - 5,'evaluating', now() - INTERVAL '40 days'),
 
   ('SNY/UD/2026/004','nodal.ud@demo.sanyog.in','Urban Development Department','Aryan Mehta',
    'Continuous road-defect survey without a dedicated survey fleet',
    'Road condition is recorded only when a complaint is filed or an annual survey is commissioned, so the asset register is stale for most of the year.',
    'Maintain a ward-level road condition layer refreshed at least weekly, using vehicles already on the road.',
    'Urban Infra','Wards with condition data <7 days old', 8, 85, '% of wards','increase',
+   -- Relative window: OPEN — this is the challenge a startup applies to live
+   -- on stage. Applications succeed for another ~6 weeks after seeding.
    150,'No new vehicles. Footage containing faces or number plates must be blurred at source.',
    'Ward GIS boundaries; municipal vehicle routes; historical complaint log.',
-   1500000, 150, DATE '2026-03-01', DATE '2026-04-01','published', TIMESTAMPTZ '2026-03-01 10:00+05:30')
+   1500000, 150, CURRENT_DATE - 14, CURRENT_DATE + 45,'published', now() - INTERVAL '14 days')
 ON CONFLICT (reference_no) DO NOTHING;
 
 -- ═══════════════════════════ STAGE 2 & 3 — APPLICATIONS + SCORES ═══════════
@@ -179,31 +183,48 @@ FROM challenge_applications a WHERE a.startup_id='st-3'
 ON CONFLICT (application_id, evaluator_email) DO NOTHING;
 
 -- ══════════════════════════ STAGES 4 & 5 — SANDBOX AGREEMENTS ══════════════
+-- NOTE: sandbox_agreements has no natural unique key, so ON CONFLICT cannot
+-- dedupe it — the NOT EXISTS guard (one sandbox per startup in this seed) is
+-- what makes re-running this file safe.
 INSERT INTO sandbox_agreements (startup_id, startup_name, department_name, scope, sites, max_users,
                                 data_shared, data_anonymised, data_localised_in_india,
                                 security_audit_status, security_auditor, iso_27001_edition, cleared_at,
                                 starts_on, exit_on, liability_cap_inr,
                                 exit_strategy, withdrawal_strategy, status)
-VALUES
+SELECT v.* FROM (VALUES
   ('st-1','JalRakshak Systems','Water Supply & Sanitation',
    'Twelve district metering areas in the Kothrud zone. Read-only SCADA integration; no control actions.',
-   'Kothrud zone, DMA 01–12', NULL,
+   'Kothrud zone, DMA 01–12', NULL::INT,
    'SCADA flow telemetry and GIS pipe network. No customer or billing records.', true, true,
    'cleared','CERT-In empanelled auditor','2022', TIMESTAMPTZ '2026-02-20 16:00+05:30',
-   DATE '2026-03-01', DATE '2026-08-28', 2500000,
+   DATE '2026-03-01', DATE '2026-08-28', 2500000::BIGINT,
    'On success, hand over the sensor register and dashboard; department retains a perpetual non-exclusive internal-use licence.',
    'On termination, remove all sensors within 14 days, return SCADA access, and delete all telemetry copies held outside the state network.',
    'completed'),
-  ('st-6','GridSense','Urban Development Department',
+  ('st-3','AarogyaTrack','Public Health Department',
+   'Handheld X-ray screening camps across two high-burden blocks. On-device CAD inference only; no image leaves the district network.',
+   'Bhiwandi and Malegaon blocks', NULL::INT,
+   'Anonymised chest X-ray images and screening outcomes. No patient identifiers.', true, true,
+   'cleared','CERT-In empanelled auditor','2022', TIMESTAMPTZ '2025-12-10 11:00+05:30',
+   DATE '2025-12-15', DATE '2026-06-15', 2500000::BIGINT,
+   'On success, hand over the deployment register and screening-outcome dashboard; department retains a perpetual non-exclusive internal-use licence.',
+   'On termination, remove devices within 14 days and erase all cached images and inference logs.',
+   'completed'),
+  ('st-6','GridSense','Energy Department (MSEDCL)',
    'Forty distribution transformers across two feeders. Monitoring only; no switching authority.',
-   'Feeder 3 and Feeder 7', NULL,
+   'Feeder 3 and Feeder 7', NULL::INT,
    'Transformer load and oil-temperature telemetry. No consumer data.', true, true,
    'cleared','CERT-In empanelled auditor','2022', TIMESTAMPTZ '2026-04-05 12:00+05:30',
-   DATE '2026-04-15', DATE '2026-10-12', 1500000,
+   DATE '2026-04-15', DATE '2026-10-12', 1500000::BIGINT,
    'Hand over the sensor register and failure-prediction model outputs.',
    'Remove sensors within 14 days; delete all telemetry copies.',
    'active')
-ON CONFLICT DO NOTHING;
+) AS v(startup_id, startup_name, department_name, scope, sites, max_users,
+       data_shared, data_anonymised, data_localised_in_india,
+       security_audit_status, security_auditor, iso_27001_edition, cleared_at,
+       starts_on, exit_on, liability_cap_inr,
+       exit_strategy, withdrawal_strategy, status)
+WHERE NOT EXISTS (SELECT 1 FROM sandbox_agreements sa WHERE sa.startup_id = v.startup_id);
 
 -- ══════════════════════════════ STAGE 6 — MILESTONES ═══════════════════════
 -- 30 / 40 / 30. Tranche 1 is a mobilisation ADVANCE (GFR Rule 172 caps advances
@@ -221,24 +242,36 @@ VALUES
    'Release on receipt of the third-party report measuring non-revenue water against the agreed baseline.',
    30, 750000,'verified','VJTI Assessment Cell', TIMESTAMPTZ '2026-09-01 12:00+05:30', NULL, DATE '2026-10-16'),
 
-  ('st-6','GridSense','Urban Development Department',1,'Mobilisation advance','mobilisation_advance',
+  ('st-3','AarogyaTrack','Public Health Department',1,'Mobilisation advance','mobilisation_advance',
+   'Released against a bank guarantee on signature of the sandbox agreement. Not a performance milestone.',
+   30, 750000,'released','Vani Reddy', TIMESTAMPTZ '2025-12-15 10:00+05:30', TIMESTAMPTZ '2025-12-19 10:00+05:30', DATE '2026-01-29'),
+  ('st-3','AarogyaTrack','Public Health Department',2,'Mid-term KPI demonstration','kpi_demonstration',
+   'Live camp demonstration: presumptive cases flagged on-device and confirmed downstream at the agreed sensitivity.',
+   40,1000000,'released','Vani Reddy', TIMESTAMPTZ '2026-03-10 15:00+05:30', TIMESTAMPTZ '2026-03-17 11:00+05:30', DATE '2026-04-24'),
+  ('st-3','AarogyaTrack','Public Health Department',3,'Independent validation','independent_validation',
+   'Released on receipt of the independent report measuring notification rate against the locked baseline.',
+   30, 750000,'released','IIT Bombay — Koita Centre for Digital Health', TIMESTAMPTZ '2026-06-18 12:00+05:30', TIMESTAMPTZ '2026-06-25 10:00+05:30', DATE '2026-08-02'),
+
+  ('st-6','GridSense','Energy Department (MSEDCL)',1,'Mobilisation advance','mobilisation_advance',
    'Released against a bank guarantee on signature of the sandbox agreement.',
    30, 750000,'released','Aryan Mehta', TIMESTAMPTZ '2026-04-15 10:00+05:30', TIMESTAMPTZ '2026-04-21 10:00+05:30', DATE '2026-05-30'),
-  ('st-6','GridSense','Urban Development Department',2,'Mid-term KPI demonstration','kpi_demonstration',
+  ('st-6','GridSense','Energy Department (MSEDCL)',2,'Mid-term KPI demonstration','kpi_demonstration',
    'Demonstrate prediction of at least 3 impending failures confirmed by inspection.',
    40,1000000,'in_review',NULL,NULL,NULL, DATE '2026-08-29'),
-  ('st-6','GridSense','Urban Development Department',3,'Independent validation','independent_validation',
+  ('st-6','GridSense','Energy Department (MSEDCL)',3,'Independent validation','independent_validation',
    'Third-party measurement of unplanned outage minutes against baseline.',
    30, 750000,'pending',NULL,NULL,NULL, DATE '2026-11-26')
 ON CONFLICT (startup_id, seq) DO NOTHING;
 
 -- ════════════════════════════════ STAGE 7 — KPIs ═══════════════════════════
+-- NOTE: pilot_kpis has no natural unique key either — same NOT EXISTS guard,
+-- keyed on (startup_id, kpi_description).
 INSERT INTO pilot_kpis (startup_id, startup_name, department_name, kpi_description, unit, direction,
                         baseline_value, target_value, target_timepoint, measured_value,
                         is_go_no_go, go_no_go_threshold, measurement_frequency, data_source,
                         responsible_org, locked_by, validator_org, validator_type,
                         validated_at, validation_verdict, validation_note)
-VALUES
+SELECT v.* FROM (VALUES
   ('st-1','JalRakshak Systems','Water Supply & Sanitation',
    'Non-revenue water in the Kothrud distribution zone','% of supply entering the zone','decrease',
    38, 24, DATE '2026-08-28', 25.1,
@@ -255,12 +288,36 @@ VALUES
    TIMESTAMPTZ '2026-09-01 12:00+05:30','met',
    'Median 2.4 hours across 34 confirmed leak events. Target met.'),
 
-  ('st-6','GridSense','Urban Development Department',
+  ('st-3','AarogyaTrack','Public Health Department',
+   'Confirmed TB notifications per 1,000 screened','per 1,000 screened','increase',
+   4.2, 6.5, DATE '2026-06-15', 6.9,
+   true, 5.5,'Monthly','NTEP notification counts cross-checked against camp screening logs','Public Health Department',
+   'Vani Reddy','IIT Bombay — Koita Centre for Digital Health','academic',
+   TIMESTAMPTZ '2026-06-18 12:00+05:30','met',
+   'Measured 6.9 per 1,000 screened against a 6.5 target — target exceeded. Sensitivity held across both blocks.'),
+
+  ('st-3','AarogyaTrack','Public Health Department',
+   'Median radiologist review turnaround at screening camps','hours','decrease',
+   72, 24, DATE '2026-06-15', 30,
+   false, 48,'Per camp','Camp timestamp log from flag to confirmed read','IIT Bombay — Koita Centre for Digital Health',
+   'Vani Reddy','IIT Bombay — Koita Centre for Digital Health','academic',
+   TIMESTAMPTZ '2026-06-18 12:00+05:30','partially_met',
+   'Median 30 hours against a 24-hour target — target not fully met, but well inside the 48-hour threshold and a 58% improvement on baseline.'),
+
+  ('st-6','GridSense','Energy Department (MSEDCL)',
    'Unplanned transformer outage minutes per month','minutes','decrease',
    860, 500, DATE '2026-10-12', NULL,
-   true, 620,'Monthly','Feeder outage log','Urban Development Department',
+   true, 620,'Monthly','Feeder outage log','Energy Department (MSEDCL)',
    'Aryan Mehta', NULL, NULL, NULL, NULL, NULL)
-ON CONFLICT DO NOTHING;
+) AS v(startup_id, startup_name, department_name, kpi_description, unit, direction,
+       baseline_value, target_value, target_timepoint, measured_value,
+       is_go_no_go, go_no_go_threshold, measurement_frequency, data_source,
+       responsible_org, locked_by, validator_org, validator_type,
+       validated_at, validation_verdict, validation_note)
+WHERE NOT EXISTS (
+  SELECT 1 FROM pilot_kpis k
+  WHERE k.startup_id = v.startup_id AND k.kpi_description = v.kpi_description
+);
 
 -- ═══════════════════════════ STAGE 8 — SCALE-UP GATE ═══════════════════════
 -- AarogyaTrack has THREE satisfactory endorsements, so the Odisha gate fires.

@@ -1765,7 +1765,11 @@ function getVCAdmin() {
 // never break the primary action, so everything is wrapped and swallowed.
 type ActivityType =
   | 'startup_registered' | 'startup_approved' | 'startup_rejected'
-  | 'doc_uploaded' | 'doc_removed' | 'startup_removed' | 'investor_removed';
+  | 'doc_uploaded' | 'doc_removed' | 'startup_removed' | 'investor_removed'
+  // Procurement pathway (stages 1–8)
+  | 'challenge_published' | 'application_submitted' | 'panel_scored'
+  | 'milestone_verified' | 'milestone_released' | 'kpi_validated'
+  | 'endorsement_recorded' | 'scaled_up';
 async function logActivity(ev: {
   type: ActivityType;
   actor_email?: string | null;
@@ -2311,6 +2315,426 @@ async function handleContactMarkRead(request: Request): Promise<Response> {
   return jsonRes({ ok: true });
 }
 
+// ═════════════════════════════════════════════════════════════════════════════
+// PROCUREMENT PATHWAY — the eight stages of PS 26136 as API
+//
+//   Stage 1  POST /api/challenges/create      GET /api/challenges
+//   Stage 2  POST /api/challenges/apply       (eligibility screening inline)
+//   Stage 3  POST /api/applications/score     (dual-axis panel rubric)
+//   St 4/5   carried by sandbox_agreements    (read via /api/pathway)
+//   Stage 6  POST /api/milestones/verify      POST /api/milestones/release
+//   Stage 7  POST /api/kpis/record            (verdict computed server-side)
+//   Stage 8  POST /api/endorsements           (3-department gate, auto-scale)
+//   View     GET  /api/pathway?startup_id=…   GET /api/pathway/solutions
+//   Fix      GET  /api/documents/confidential (dept-gated, replaces the anon
+//                                              browser query in scout.tsx)
+//
+// Reads are public but limited to published/approved rows; every write goes
+// through getAuthedUser. "Department" means an APPROVED vc_profiles row (or the
+// permanent admin, so the whole flow can be demonstrated from one account).
+// ═════════════════════════════════════════════════════════════════════════════
+
+/** Resolve whether the caller may act as a department; returns its display name. */
+async function getActingDepartment(request: Request): Promise<{ email: string; role: string; deptName: string } | null> {
+  const authed = await getAuthedUser(request);
+  if (!authed) return null;
+  const db = getVCAdmin();
+  const { data } = await db.from('vc_profiles')
+    .select('firm_name, status').eq('email', authed.email).maybeSingle();
+  if (data?.status === 'approved') return { ...authed, deptName: data.firm_name };
+  if (authed.role === 'admin') return { ...authed, deptName: 'Maharashtra State Innovation Society' };
+  return null;
+}
+
+const isUniqueViolation = (err: { code?: string } | null) => err?.code === '23505';
+
+// ─── Stage 1: list challenges (public — drafts and withdrawn stay hidden) ────
+async function handlePathwayChallenges(): Promise<Response> {
+  const db = getVCAdmin();
+  const { data, error } = await db.from('challenges')
+    .select('id, reference_no, department_name, nodal_officer, title, problem_statement, outcome_sought, domain, baseline_metric, baseline_value, target_value, metric_unit, metric_direction, target_window_days, operational_constraints, data_available, pilot_budget_inr, pilot_duration_days, dpiit_required, turnover_relaxed, experience_relaxed, emd_exempt, opens_on, closes_on, evaluation_days, deemed_approval, status, published_at')
+    .in('status', ['published', 'evaluating', 'awarded', 'closed'])
+    .order('published_at', { ascending: false });
+  if (error) return jsonRes({ error: error.message }, 500);
+
+  // Attach application counts so the board can show live demand.
+  const ids = (data ?? []).map(c => c.id);
+  const counts: Record<string, number> = {};
+  if (ids.length) {
+    const { data: apps } = await db.from('challenge_applications').select('challenge_id').in('challenge_id', ids);
+    for (const a of apps ?? []) counts[a.challenge_id] = (counts[a.challenge_id] ?? 0) + 1;
+  }
+  return jsonRes((data ?? []).map(c => ({ ...c, application_count: counts[c.id] ?? 0 })));
+}
+
+// ─── Stage 1: create a challenge from the Problem Statement Template ─────────
+async function handleChallengeCreate(request: Request): Promise<Response> {
+  const dept = await getActingDepartment(request);
+  if (!dept) return jsonRes({ error: 'Only a verified department (or the admin) can publish a challenge.' }, 403);
+  try {
+    const b = await request.json() as Record<string, unknown>;
+    const required = ['title', 'problem_statement', 'outcome_sought', 'domain', 'baseline_metric', 'baseline_value', 'target_value', 'metric_unit', 'pilot_budget_inr'];
+    const missing = required.filter(k => b[k] === undefined || b[k] === null || b[k] === '');
+    if (missing.length) return jsonRes({ error: `The template is incomplete — missing: ${missing.join(', ')}. A challenge without a baseline and target can never be validated.` }, 400);
+
+    const baseline = Number(b.baseline_value), target = Number(b.target_value), budget = Number(b.pilot_budget_inr);
+    if (!Number.isFinite(baseline) || !Number.isFinite(target)) return jsonRes({ error: 'Baseline and target must be numbers.' }, 400);
+    if (target === baseline) return jsonRes({ error: 'Target must differ from the baseline — otherwise there is nothing to measure.' }, 400);
+    if (!Number.isFinite(budget) || budget <= 0) return jsonRes({ error: 'Pilot budget must be a positive amount in rupees.' }, 400);
+
+    const db = getVCAdmin();
+    // Human-readable reference: SNY/<DOMAIN>/<year>/<seq>
+    const year = new Date().getFullYear();
+    const dom = String(b.domain).replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase() || 'GN';
+    const { count } = await db.from('challenges').select('id', { count: 'exact', head: true });
+    const reference_no = `SNY/${dom}/${year}/${String((count ?? 0) + 1).padStart(3, '0')}`;
+
+    // challenges.department_email has an FK to users(email). A caller authorised
+    // through vc_profiles (or the hardcoded admin) may not have a users row yet —
+    // create the minimal one instead of failing the publish on the constraint.
+    await db.from('users').upsert(
+      { email: dept.email, name: dept.deptName, role: dept.role === 'admin' ? 'admin' : 'vc' },
+      { onConflict: 'email', ignoreDuplicates: true },
+    );
+
+    const { data, error } = await db.from('challenges').insert({
+      reference_no,
+      department_email: dept.email,
+      department_name: dept.deptName,
+      nodal_officer: (b.nodal_officer as string) || null,
+      title: b.title, problem_statement: b.problem_statement, outcome_sought: b.outcome_sought,
+      domain: b.domain,
+      baseline_metric: b.baseline_metric, baseline_value: baseline, target_value: target,
+      metric_unit: b.metric_unit,
+      metric_direction: b.metric_direction === 'increase' ? 'increase' : 'decrease',
+      target_window_days: b.target_window_days ? Number(b.target_window_days) : null,
+      operational_constraints: (b.operational_constraints as string) || null,
+      data_available: (b.data_available as string) || null,
+      pilot_budget_inr: budget,
+      pilot_duration_days: b.pilot_duration_days ? Number(b.pilot_duration_days) : 180,
+      dpiit_required: b.dpiit_required !== false,
+      turnover_relaxed: b.turnover_relaxed !== false,
+      experience_relaxed: b.experience_relaxed !== false,
+      emd_exempt: b.emd_exempt !== false,
+      opens_on: (b.opens_on as string) || new Date().toISOString().slice(0, 10),
+      closes_on: (b.closes_on as string) || null,
+      status: 'published',
+      published_at: new Date().toISOString(),
+    }).select().single();
+    if (error) return jsonRes({ error: error.message }, 500);
+
+    await logActivity({ type: 'challenge_published', actor_email: dept.email, title: String(b.title), detail: `${dept.deptName} · budget ₹${(budget / 1e5).toFixed(1)}L · ${b.baseline_metric}: ${baseline} → ${target} ${b.metric_unit}`, meta: { challenge_id: data.id, reference_no } });
+    return jsonRes(data);
+  } catch {
+    return jsonRes({ error: 'Failed to create the challenge.' }, 500);
+  }
+}
+
+// ─── Stage 2: apply + eligibility screening ──────────────────────────────────
+// Screening is mechanical and recorded: DPIIT recognition is checked, and the
+// GFR 2017 relaxations (Rule 173(i) turnover/experience, Rule 170(i) EMD) are
+// applied AS THE DEFAULT rather than left to officer discretion — that reversal
+// of the default is the platform's core policy contribution.
+async function handleChallengeApply(request: Request): Promise<Response> {
+  const authed = await getAuthedUser(request);
+  if (!authed) return jsonRes({ error: 'Sign in to apply to a challenge.' }, 401);
+  try {
+    const b = await request.json() as { challenge_id?: string; startup_id?: string; proposal_summary?: string; proposed_budget_inr?: number; proposed_days?: number };
+    if (!b.challenge_id || !b.startup_id) return jsonRes({ error: 'challenge_id and startup_id are required.' }, 400);
+    if (!b.proposal_summary || b.proposal_summary.trim().length < 30)
+      return jsonRes({ error: 'A proposal summary of at least 30 characters is required — the panel scores what you write here.' }, 400);
+
+    const db = getVCAdmin();
+    const { data: ch } = await db.from('challenges').select('id, title, status, closes_on, pilot_budget_inr, dpiit_required, turnover_relaxed, experience_relaxed, emd_exempt').eq('id', b.challenge_id).maybeSingle();
+    if (!ch) return jsonRes({ error: 'Challenge not found.' }, 404);
+    if (ch.status !== 'published' && ch.status !== 'evaluating') return jsonRes({ error: `This challenge is ${ch.status} and no longer accepting applications.` }, 409);
+    if (ch.closes_on && new Date(ch.closes_on) < new Date(new Date().toISOString().slice(0, 10))) return jsonRes({ error: 'The application window for this challenge has closed.' }, 409);
+
+    const { data: st } = await db.from('startups').select('id, name, status, dpiit_recognition_no, dpiit_verified, owner_email, created_by_email').eq('id', b.startup_id).maybeSingle();
+    if (!st) return jsonRes({ error: 'Startup not found — register your solution first.' }, 404);
+    if (st.status !== 'approved') return jsonRes({ error: 'Your solution registration is still under review. You can apply as soon as it is approved.' }, 409);
+    const owners = [st.owner_email, st.created_by_email].filter(Boolean).map((x: string) => x.toLowerCase());
+    if (authed.role !== 'admin' && !owners.includes(authed.email)) return jsonRes({ error: 'You can only apply on behalf of your own solution.' }, 403);
+
+    // Eligibility screen. Recognition satisfies DPIIT where required; the
+    // legacy barriers are recorded as waived per the challenge's own posture.
+    const dpiitOk = !ch.dpiit_required || !!(st.dpiit_verified || st.dpiit_recognition_no);
+    const eligibility_status = dpiitOk ? 'eligible' : 'ineligible';
+    const ineligible_reason = dpiitOk ? null : 'DPIIT/Startup India recognition is required for this challenge and is not on record for this solution. Add your recognition number to your profile and re-apply.';
+
+    const { data, error } = await db.from('challenge_applications').insert({
+      challenge_id: ch.id, startup_id: st.id, startup_name: st.name, applicant_email: authed.email,
+      proposal_summary: b.proposal_summary.trim(),
+      proposed_budget_inr: b.proposed_budget_inr ? Number(b.proposed_budget_inr) : null,
+      proposed_days: b.proposed_days ? Number(b.proposed_days) : null,
+      eligibility_status, ineligible_reason, dpiit_checked: true,
+      screened_at: new Date().toISOString(),
+      status: dpiitOk ? 'screened' : 'rejected',
+    }).select().single();
+    if (isUniqueViolation(error)) return jsonRes({ error: `${st.name} has already applied to this challenge — one application per solution.` }, 409);
+    if (error) return jsonRes({ error: error.message }, 500);
+
+    await logActivity({ type: 'application_submitted', actor_email: authed.email, title: st.name, detail: `Applied to ${ch.title} · ${eligibility_status}${dpiitOk ? ' · turnover/experience/EMD conditions waived' : ''}`, meta: { challenge_id: ch.id, application_id: data.id } });
+    return jsonRes({
+      ...data,
+      screening: {
+        dpiit: dpiitOk ? 'verified' : 'not_on_record',
+        turnover_waived: !!ch.turnover_relaxed,       // GFR 2017 Rule 173(i)
+        experience_waived: !!ch.experience_relaxed,   // GFR 2017 Rule 173(i)
+        emd_exempt: !!ch.emd_exempt,                  // GFR 2017 Rule 170(i)
+      },
+    });
+  } catch {
+    return jsonRes({ error: 'Failed to submit the application.' }, 500);
+  }
+}
+
+// ─── Stage 3: attributable panel scoring ─────────────────────────────────────
+async function handleApplicationScore(request: Request): Promise<Response> {
+  const authed = await getAuthedUser(request);
+  if (!authed) return jsonRes({ error: 'Sign in to score an application.' }, 401);
+  const dept = await getActingDepartment(request);
+  if (!dept && authed.role !== 'admin' && authed.role !== 'evaluator')
+    return jsonRes({ error: 'Scoring is limited to panel evaluators, verified departments and the admin.' }, 403);
+  try {
+    const b = await request.json() as { application_id?: string; technical_viability?: number; innovation_quotient?: number; rationale?: string; conflict_declared?: boolean; evaluator_name?: string; evaluator_org?: string };
+    const tech = Number(b.technical_viability), innov = Number(b.innovation_quotient);
+    if (!b.application_id) return jsonRes({ error: 'application_id required.' }, 400);
+    if (!Number.isInteger(tech) || tech < 0 || tech > 50 || !Number.isInteger(innov) || innov < 0 || innov > 50)
+      return jsonRes({ error: 'Both axes are scored 0–50: technical viability and innovation quotient.' }, 400);
+    if (!b.rationale || b.rationale.trim().length < 20)
+      return jsonRes({ error: 'A written rationale (min 20 chars) is mandatory — a bare number cannot be defended on audit.' }, 400);
+
+    const db = getVCAdmin();
+    const { data: app } = await db.from('challenge_applications').select('id, startup_name, eligibility_status, status').eq('id', b.application_id).maybeSingle();
+    if (!app) return jsonRes({ error: 'Application not found.' }, 404);
+    if (app.eligibility_status === 'ineligible') return jsonRes({ error: 'This application failed eligibility screening and cannot be scored.' }, 409);
+
+    const row = {
+      application_id: b.application_id, evaluator_email: authed.email,
+      evaluator_name: b.evaluator_name || dept?.deptName || authed.email,
+      evaluator_org: b.evaluator_org || dept?.deptName || null,
+      technical_viability: tech, innovation_quotient: innov,
+      rationale: b.rationale.trim(), conflict_declared: !!b.conflict_declared,
+      submitted_at: new Date().toISOString(),
+    };
+    // One score per evaluator; re-submitting revises their own score.
+    const { data, error } = await db.from('evaluation_scores')
+      .upsert(row, { onConflict: 'application_id,evaluator_email' }).select().single();
+    if (error) return jsonRes({ error: error.message }, 500);
+
+    await db.from('challenge_applications').update({ status: 'evaluated' }).eq('id', b.application_id).eq('status', 'screened');
+    await logActivity({ type: 'panel_scored', actor_email: authed.email, title: app.startup_name, detail: `Scored ${tech}+${innov}=${tech + innov}/100${b.conflict_declared ? ' · conflict declared' : ''}`, meta: { application_id: b.application_id } });
+    return jsonRes(data);
+  } catch {
+    return jsonRes({ error: 'Failed to record the score.' }, 500);
+  }
+}
+
+// ─── Stage 6: verify then release a milestone ────────────────────────────────
+async function handleMilestoneVerify(request: Request): Promise<Response> {
+  const dept = await getActingDepartment(request);
+  if (!dept) return jsonRes({ error: 'Only a verified department (or the admin) can verify a milestone.' }, 403);
+  try {
+    const { milestone_id, note } = await request.json() as { milestone_id?: string; note?: string };
+    if (!milestone_id) return jsonRes({ error: 'milestone_id required.' }, 400);
+    const db = getVCAdmin();
+    const { data: m } = await db.from('pilot_milestones').select('*').eq('id', milestone_id).maybeSingle();
+    if (!m) return jsonRes({ error: 'Milestone not found.' }, 404);
+    if (m.status === 'released') return jsonRes({ error: 'This tranche is already released.' }, 409);
+    if (m.status === 'verified') return jsonRes({ error: 'Already verified — release it when payment is made.' }, 409);
+
+    const { data, error } = await db.from('pilot_milestones').update({
+      status: 'verified', verified_by: dept.deptName, verified_at: new Date().toISOString(),
+      note: note?.trim() || m.note,
+    }).eq('id', milestone_id).select().single();
+    if (error) return jsonRes({ error: error.message }, 500);
+    await logActivity({ type: 'milestone_verified', actor_email: dept.email, title: m.startup_name, detail: `Tranche ${m.seq} (${m.pct}%) verified — ${m.label}`, meta: { milestone_id } });
+    return jsonRes(data);
+  } catch {
+    return jsonRes({ error: 'Failed to verify the milestone.' }, 500);
+  }
+}
+
+async function handleMilestoneRelease(request: Request): Promise<Response> {
+  const dept = await getActingDepartment(request);
+  if (!dept) return jsonRes({ error: 'Only a verified department (or the admin) can release a payment.' }, 403);
+  try {
+    const { milestone_id } = await request.json() as { milestone_id?: string };
+    if (!milestone_id) return jsonRes({ error: 'milestone_id required.' }, 400);
+    const db = getVCAdmin();
+    const { data: m } = await db.from('pilot_milestones').select('*').eq('id', milestone_id).maybeSingle();
+    if (!m) return jsonRes({ error: 'Milestone not found.' }, 404);
+    if (m.status === 'released') return jsonRes({ error: 'Already released.' }, 409);
+    // The database constraint enforces this too; failing early gives a message
+    // instead of a constraint violation.
+    if (!m.verified_at) return jsonRes({ error: 'No payment without a recorded verification — verify the milestone first.' }, 409);
+
+    const { data, error } = await db.from('pilot_milestones').update({
+      status: 'released', released_at: new Date().toISOString(),
+    }).eq('id', milestone_id).select().single();
+    if (error) return jsonRes({ error: error.message }, 500);
+
+    // Reflect the released tranche in the solution's running total.
+    if (m.amount_inr) {
+      const { data: st } = await db.from('startups').select('raised').eq('id', m.startup_id).maybeSingle();
+      if (st) await db.from('startups').update({ raised: (Number(st.raised) || 0) + Number(m.amount_inr) }).eq('id', m.startup_id);
+    }
+    await logActivity({ type: 'milestone_released', actor_email: dept.email, title: m.startup_name, detail: `Tranche ${m.seq} (${m.pct}%) released — ₹${((m.amount_inr ?? 0) / 1e5).toFixed(1)}L`, meta: { milestone_id } });
+    return jsonRes(data);
+  } catch {
+    return jsonRes({ error: 'Failed to release the milestone.' }, 500);
+  }
+}
+
+// ─── Stage 7: record an independent measurement ──────────────────────────────
+// The verdict is COMPUTED here, from the locked target and threshold — the
+// validator supplies the measurement, never the conclusion.
+async function handleKpiRecord(request: Request): Promise<Response> {
+  const dept = await getActingDepartment(request);
+  const authed = dept ?? await getAuthedUser(request);
+  if (!authed || (!dept && (authed as { role: string }).role !== 'validator' && (authed as { role: string }).role !== 'admin'))
+    return jsonRes({ error: 'Recording a measurement is limited to the validator, verified departments and the admin.' }, 403);
+  try {
+    const b = await request.json() as { kpi_id?: string; measured_value?: number; validator_org?: string; validator_type?: string; validation_note?: string; report_url?: string };
+    if (!b.kpi_id) return jsonRes({ error: 'kpi_id required.' }, 400);
+    const measured = Number(b.measured_value);
+    if (!Number.isFinite(measured)) return jsonRes({ error: 'measured_value must be a number.' }, 400);
+    if (!b.validator_org || !b.validator_org.trim()) return jsonRes({ error: 'validator_org is required — an unattributed measurement is not independent validation.' }, 400);
+
+    const db = getVCAdmin();
+    const { data: k } = await db.from('pilot_kpis').select('*').eq('id', b.kpi_id).maybeSingle();
+    if (!k) return jsonRes({ error: 'KPI not found.' }, 404);
+
+    // Verdict against the pre-registered target (locked_at) and threshold.
+    const inc = k.direction === 'increase';
+    const metTarget = inc ? measured >= Number(k.target_value) : measured <= Number(k.target_value);
+    const insideGate = k.go_no_go_threshold == null ? metTarget
+      : (inc ? measured >= Number(k.go_no_go_threshold) : measured <= Number(k.go_no_go_threshold));
+    const verdict = metTarget ? 'met' : insideGate ? 'partially_met' : 'not_met';
+
+    const allowedTypes = ['academic', 'stqc_or_setl', 'nabl_lab', 'dmeo_empanelled', 'department_internal', 'other'];
+    const { data, error } = await db.from('pilot_kpis').update({
+      measured_value: measured,
+      validator_org: b.validator_org.trim(),
+      validator_type: allowedTypes.includes(String(b.validator_type)) ? b.validator_type : 'other',
+      validated_at: new Date().toISOString(),
+      validation_verdict: verdict,
+      validation_note: b.validation_note?.trim() || null,
+      report_url: b.report_url?.trim() || null,
+    }).eq('id', b.kpi_id).select().single();
+    if (error) return jsonRes({ error: error.message }, 500);
+
+    await logActivity({ type: 'kpi_validated', actor_email: (authed as { email: string }).email, title: k.startup_name, detail: `${k.kpi_description}: ${k.baseline_value} → ${measured} ${k.unit ?? ''} · ${verdict.replace('_', ' ')}`, meta: { kpi_id: b.kpi_id } });
+    return jsonRes(data);
+  } catch {
+    return jsonRes({ error: 'Failed to record the measurement.' }, 500);
+  }
+}
+
+// ─── Stage 8: departmental endorsement + the 3-department gate ───────────────
+async function handleEndorsementCreate(request: Request): Promise<Response> {
+  const dept = await getActingDepartment(request);
+  if (!dept) return jsonRes({ error: 'Only a verified department (or the admin) can endorse a pilot.' }, 403);
+  try {
+    const b = await request.json() as { startup_id?: string; verdict?: string; pilot_ref?: string; note?: string; department_name?: string };
+    if (!b.startup_id) return jsonRes({ error: 'startup_id required.' }, 400);
+    if (b.verdict !== 'satisfactory' && b.verdict !== 'unsatisfactory') return jsonRes({ error: "verdict must be 'satisfactory' or 'unsatisfactory'." }, 400);
+    if (b.verdict === 'unsatisfactory' && (!b.note || !b.note.trim()))
+      return jsonRes({ error: 'An unsatisfactory verdict must state why — unexplained rejection is what this platform exists to remove.' }, 400);
+
+    const db = getVCAdmin();
+    const { data: st } = await db.from('startups').select('id, name, stage').eq('id', b.startup_id).maybeSingle();
+    if (!st) return jsonRes({ error: 'Solution not found.' }, 404);
+
+    const departmentName = (dept.role === 'admin' && b.department_name?.trim()) ? b.department_name.trim() : dept.deptName;
+    const { error } = await db.from('scale_up_endorsements').insert({
+      startup_id: st.id, startup_name: st.name, department_name: departmentName,
+      verdict: b.verdict, pilot_ref: b.pilot_ref?.trim() || null, note: b.note?.trim() || null, endorsed_by: dept.email,
+    });
+    if (isUniqueViolation(error)) return jsonRes({ error: `${departmentName} has already endorsed this solution — one endorsement per department.` }, 409);
+    if (error) return jsonRes({ error: error.message }, 500);
+
+    // Recompute the gate (Odisha rule: 3+ satisfactory departmental reports).
+    const { data: gate } = await db.from('scale_up_readiness').select('*').eq('startup_id', st.id).maybeSingle();
+    const unlocked = !!gate?.gate_unlocked;
+    if (unlocked && st.stage === 'Validated') {
+      await db.from('startups').update({ stage: 'Scaled' }).eq('id', st.id);
+      await logActivity({ type: 'scaled_up', actor_email: dept.email, title: st.name, detail: `Scale-up gate unlocked — ${gate.satisfactory_count} satisfactory departmental endorsements`, meta: { startup_id: st.id } });
+    } else {
+      await logActivity({ type: 'endorsement_recorded', actor_email: dept.email, title: st.name, detail: `${departmentName}: ${b.verdict}${gate ? ` · gate ${gate.satisfactory_count}/3` : ''}`, meta: { startup_id: st.id } });
+    }
+    return jsonRes({ ok: true, gate: gate ?? { satisfactory_count: 0, gate_unlocked: false }, stage_advanced: unlocked && st.stage === 'Validated' });
+  } catch {
+    return jsonRes({ error: 'Failed to record the endorsement.' }, 500);
+  }
+}
+
+// ─── Solutions list for the pathway selector ─────────────────────────────────
+async function handlePathwaySolutions(): Promise<Response> {
+  const db = getVCAdmin();
+  const { data, error } = await db.from('startups')
+    .select('id, name, tagline, founder, industry, stage, funding_goal, raised, pitch_score, dpiit_verified')
+    .eq('status', 'approved').order('created_at', { ascending: true });
+  if (error) return jsonRes({ error: error.message }, 500);
+  return jsonRes(data ?? []);
+}
+
+// ─── The composite pathway view: one call, all eight stages ──────────────────
+async function handlePathwayView(request: Request): Promise<Response> {
+  const url = new URL(request.url);
+  const startupId = url.searchParams.get('startup_id');
+  if (!startupId) return jsonRes({ error: 'startup_id query parameter required.' }, 400);
+  const db = getVCAdmin();
+
+  const { data: startup } = await db.from('startups')
+    .select('id, name, tagline, description, founder, industry, stage, funding_goal, raised, pitch_score, dpiit_verified, dpiit_recognition_no, turnover_waived, experience_waived, status')
+    .eq('id', startupId).maybeSingle();
+  if (!startup) return jsonRes({ error: 'Solution not found.' }, 404);
+
+  const [{ data: applications }, { data: sandboxes }, { data: milestones }, { data: kpis }, { data: endorsements }, { data: gate }] = await Promise.all([
+    db.from('challenge_applications').select('*, challenges(id, reference_no, title, department_name, domain, baseline_metric, baseline_value, target_value, metric_unit, metric_direction, pilot_budget_inr, pilot_duration_days, turnover_relaxed, experience_relaxed, emd_exempt, evaluation_days, deemed_approval, status)').eq('startup_id', startupId).order('created_at', { ascending: false }),
+    db.from('sandbox_agreements').select('*').eq('startup_id', startupId).order('created_at', { ascending: false }),
+    db.from('pilot_milestones').select('*').eq('startup_id', startupId).order('seq', { ascending: true }),
+    db.from('pilot_kpis').select('*').eq('startup_id', startupId).order('created_at', { ascending: true }),
+    db.from('scale_up_endorsements').select('*').eq('startup_id', startupId).order('created_at', { ascending: true }),
+    db.from('scale_up_readiness').select('*').eq('startup_id', startupId).maybeSingle(),
+  ]);
+
+  // Panel scores for each application (attributable, with consensus).
+  const appIds = (applications ?? []).map(a => a.id);
+  let scores: unknown[] = [];
+  if (appIds.length) {
+    const { data: sc } = await db.from('evaluation_scores').select('*').in('application_id', appIds).order('submitted_at', { ascending: true });
+    scores = sc ?? [];
+  }
+
+  return jsonRes({
+    startup,
+    applications: applications ?? [],
+    scores,
+    sandboxes: sandboxes ?? [],
+    milestones: milestones ?? [],
+    kpis: kpis ?? [],
+    endorsements: endorsements ?? [],
+    gate: gate ?? { startup_id: startupId, satisfactory_count: 0, unsatisfactory_count: 0, gate_unlocked: false },
+  });
+}
+
+// ─── Confidential documents — the server-side fix for scout.tsx:921 ──────────
+// deck_type='investor' rows are excluded from anon access by design; they are
+// released here, only to verified departments (and the admin).
+async function handleConfidentialDocs(request: Request): Promise<Response> {
+  const dept = await getActingDepartment(request);
+  if (!dept) return jsonRes({ error: 'Confidential submissions are visible only to verified departments.' }, 403);
+  const db = getVCAdmin();
+  const { data, error } = await db.from('documents')
+    .select('id, created_at, name, type, status, date, views, score, file_url, startup_name, deck_type')
+    .eq('deck_type', 'investor').order('created_at', { ascending: false });
+  if (error) return jsonRes({ error: error.message }, 500);
+  return jsonRes(data ?? []);
+}
+
 // ─── Main fetch handler ───────────────────────────────────────────────────────
 export default {
   async fetch(request: Request, env: Env, ctx: unknown) {
@@ -2438,6 +2862,40 @@ export default {
 
     if (pathname === '/api/contact/mark-read' && method === 'POST')
       return handleContactMarkRead(request);
+
+    // ── Procurement pathway (PS 26136 stages 1–8) ──────────────────────────
+    if (pathname === '/api/challenges' && method === 'GET')
+      return handlePathwayChallenges();
+
+    if (pathname === '/api/challenges/create' && method === 'POST')
+      return handleChallengeCreate(request);
+
+    if (pathname === '/api/challenges/apply' && method === 'POST')
+      return handleChallengeApply(request);
+
+    if (pathname === '/api/applications/score' && method === 'POST')
+      return handleApplicationScore(request);
+
+    if (pathname === '/api/milestones/verify' && method === 'POST')
+      return handleMilestoneVerify(request);
+
+    if (pathname === '/api/milestones/release' && method === 'POST')
+      return handleMilestoneRelease(request);
+
+    if (pathname === '/api/kpis/record' && method === 'POST')
+      return handleKpiRecord(request);
+
+    if (pathname === '/api/endorsements' && method === 'POST')
+      return handleEndorsementCreate(request);
+
+    if (pathname === '/api/pathway/solutions' && method === 'GET')
+      return handlePathwaySolutions();
+
+    if (pathname === '/api/pathway' && method === 'GET')
+      return handlePathwayView(request);
+
+    if (pathname === '/api/documents/confidential' && method === 'GET')
+      return handleConfidentialDocs(request);
 
     if (
       (pathname === '/api/chat' || pathname === '/api/documents') &&

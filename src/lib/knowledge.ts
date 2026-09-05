@@ -157,6 +157,12 @@ const TAB_GUIDE: Record<string, { label: string; summary: string; whatItIs: stri
     whatItIs: 'Command Centre gives a startup an at-a-glance view of its position on the platform — solutions registered, pilot value won, pilots completed and average FitScore™ — plus quick jumps into the Pilot Pipeline, Solution Vault and other sections.',
     whenToUse: 'Use it as your daily starting point to see where you stand and jump into the right workspace.'
   },
+  'hub:challenges': {
+    label: 'Challenge Board',
+    summary: 'Live departmental challenges you can apply to, and your full 8-stage pathway.',
+    whatItIs: 'Challenge Board lists every published departmental challenge with its baseline→target metric, pilot budget and GFR relaxations (turnover and experience waived under Rule 173(i), EMD exempt under Rule 170(i) — quality criteria never waived). Applying runs an instant eligibility screen against your DPIIT recognition. Below the board, the Procurement Pathway tracks a solution across all 8 stages: panel scores, the sandbox agreement with its security clearance and mandatory exit date, 30/40/30 milestone payments with the MSMED 45-day clock, independently validated KPIs against pre-registered targets, and the 3-department scale-up gate that ends in a GeM listing draft.',
+    whenToUse: 'Use it to find challenges matched to your solution, apply with automatic waivers, and track your pilot from application to scale-up.'
+  },
   'hub:pipeline': {
     label: 'Pilot Pipeline',
     summary: 'A board of your solutions across the procurement journey.',
@@ -202,6 +208,12 @@ const TAB_GUIDE: Record<string, { label: string; summary: string; whatItIs: stri
     summary: "The department's command centre.",
     whatItIs: 'Procurement Cockpit surfaces the department\'s innovation budget, uncommitted budget, value already committed through Sanyog, shortlisted solutions and target outcomes, alongside a discovery radar, a live activity feed and pipeline health. It is framed around running challenges and pilots, not around finance-office accounting.',
     whenToUse: 'Use it for a strategic, at-a-glance overview of your challenges, pilots and remaining budget.'
+  },
+  'scout:challenges': {
+    label: 'Challenge Desk',
+    summary: 'Publish challenges and run the full 8-stage procurement pathway.',
+    whatItIs: 'Challenge Desk is where a department operates the pathway end to end: publish a challenge from the Problem Statement Template (baseline and target are mandatory — a challenge without a baseline can never be validated), score applications on the dual-axis rubric with a written rationale, verify and release 30/40/30 milestone payments (release is blocked until verification is recorded; the MSMED 45-day clock is visible on every unpaid tranche), record independently validated KPI measurements whose verdict is computed against targets locked before measurement began, and endorse completed pilots — three satisfactory departmental reports unlock compliant multi-department scale-up and a GeM listing draft. The three standard templates (Problem Statement, Pilot MOU, Scale-Up Scorecard) are downloadable from the same tab.',
+    whenToUse: 'Use it to publish demand, evaluate transparently, pay against verified milestones and endorse pilots toward scale-up.'
   },
   'scout:dealflow': {
     label: 'Challenge Pipeline',
