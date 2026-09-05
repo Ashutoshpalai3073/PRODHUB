@@ -65,9 +65,33 @@ function Label({ children }: { children: React.ReactNode }) {
 }
 function Card({ color, children, style }: { color: string; children: React.ReactNode; style?: React.CSSProperties }) {
   return (
-    <div style={{ borderRadius: 16, border: `1px solid ${color}26`, background: `linear-gradient(145deg,${color}0d 0%, rgba(7,7,16,0.58) 100%)`, backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', position: 'relative', overflow: 'hidden', ...style }}>
+    <div style={{ borderRadius: 16, border: `1px solid ${color}26`, background: `radial-gradient(circle at 88% -12%, ${color}16, transparent 55%), linear-gradient(145deg,${color}0d 0%, rgba(7,7,16,0.58) 100%)`, backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', position: 'relative', overflow: 'hidden', ...style }}>
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: `linear-gradient(90deg,transparent,${color}60,transparent)` }} />
+      {/* orbital ornament — a small ringed system sitting on the card corner */}
+      <div aria-hidden style={{ position: 'absolute', top: -38, right: -38, width: 128, height: 128, pointerEvents: 'none', opacity: 0.6 }}>
+        <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: `1px solid ${color}30` }} />
+        <div style={{ position: 'absolute', inset: 19, borderRadius: '50%', border: `1px dashed ${color}24` }} />
+        <div style={{ position: 'absolute', inset: 38, borderRadius: '50%', border: `1px solid ${color}1a`, background: `radial-gradient(circle at 35% 35%, ${color}22, transparent 65%)` }} />
+        <div style={{ position: 'absolute', top: 16, left: 24, width: 7, height: 7, borderRadius: '50%', background: color, boxShadow: `0 0 10px ${color}` }} />
+        <div style={{ position: 'absolute', bottom: 34, right: 6, width: 3.5, height: 3.5, borderRadius: '50%', background: `${color}99` }} />
+        <div style={{ position: 'absolute', top: 58, left: 4, width: 2.5, height: 2.5, borderRadius: '50%', background: `${color}66` }} />
+      </div>
       {children}
+    </div>
+  );
+}
+
+// Section identity: tinted icon tile + title + stage pill, shared by every card.
+function SectionHead({ Icon, color, title, tag, note, right, mb = 10 }: { Icon: React.ComponentType<{ style?: React.CSSProperties }>; color: string; title: string; tag?: string; note?: string; right?: React.ReactNode; mb?: number }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap', marginBottom: mb, position: 'relative', zIndex: 1 }}>
+      <div style={{ width: 27, height: 27, borderRadius: 9, background: `${color}14`, border: `1px solid ${color}36`, boxShadow: `inset 0 0 12px ${color}14, 0 0 14px ${color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <Icon style={{ width: 13, height: 13, color }} />
+      </div>
+      <span style={{ fontSize: 13, fontWeight: 800, color: 'white', letterSpacing: '-.01em' }}>{title}</span>
+      {tag && <span style={{ fontSize: 8.5, fontWeight: 800, color, background: `${color}12`, border: `1px solid ${color}30`, padding: '2.5px 9px', borderRadius: 999, letterSpacing: '.08em', whiteSpace: 'nowrap' }}>{tag}</span>}
+      {note && <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>{note}</span>}
+      {right}
     </div>
   );
 }
@@ -392,15 +416,12 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
       {/* ── Two-column body ── */}
       <div className="pathway-cols" style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 380px) 1fr', gap: 14, alignItems: 'start' }}>
 
-        {/* ══ LEFT: challenge board + templates ══ */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {/* ══ LEFT: challenge board + templates — sticky, so the column never
+               leaves a hole beside the (much taller) pathway column ══ */}
+        <div className="analytics-scroll pathway-left" style={{ display: 'flex', flexDirection: 'column', gap: 12, position: 'sticky', top: 0, alignSelf: 'start', maxHeight: 'calc(100dvh - 215px)', overflowY: 'auto', paddingRight: 2 }}>
           <Card color={C.challenge} style={{ padding: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-              <Landmark style={{ width: 14, height: 14, color: C.challenge }} />
-              <span style={{ fontSize: 13, fontWeight: 800, color: 'white' }}>Challenge Board</span>
-              <span style={{ fontSize: 10, color: C.dim }}>· Stage 1</span>
-              {isDept && <button onClick={() => setNewChallengeOpen(true)} style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 999, fontSize: 10.5, fontWeight: 700, color: 'white', background: `linear-gradient(90deg,${C.challenge},#6d28d9)`, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}><Plus style={{ width: 11, height: 11 }} />New Challenge</button>}
-            </div>
+            <SectionHead Icon={Landmark} color={C.challenge} title="Challenge Board" tag="STAGE 1" mb={12}
+              right={isDept ? <button onClick={() => setNewChallengeOpen(true)} style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 999, fontSize: 10.5, fontWeight: 700, color: 'white', background: `linear-gradient(90deg,${C.challenge},#6d28d9)`, border: 'none', cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 4px 16px ${C.challenge}44` }}><Plus style={{ width: 11, height: 11 }} />New Challenge</button> : undefined} />
             {loading && <p style={{ fontSize: 12, color: C.dim }}>Loading challenges…</p>}
             {!loading && challenges.length === 0 && (
               <div style={{ textAlign: 'center', padding: '22px 8px', opacity: .55 }}>
@@ -440,10 +461,7 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
 
           {/* Templates library — the three documents the problem statement demands */}
           <Card color={C.contract} style={{ padding: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-              <FileText style={{ width: 14, height: 14, color: C.contract }} />
-              <span style={{ fontSize: 13, fontWeight: 800, color: 'white' }}>Standard Templates</span>
-            </div>
+            <SectionHead Icon={FileText} color={C.contract} title="Standard Templates" tag="MANDATED · 3" />
             {[
               { key: 'problem' as const, name: 'Problem Statement Template', sub: 'Baseline–target matrix · sandbox parameters · security checklist', color: C.challenge },
               { key: 'mou' as const, name: 'Pilot Agreement (MOU)', sub: 'IP with startup · liability caps · data localisation · milestone triggers', color: C.contract },
@@ -466,14 +484,11 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
 
           {/* selector + stepper */}
           <Card color={accent} style={{ padding: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 13 }}>
-              <GitBranch style={{ width: 14, height: 14, color: accent }} />
-              <span style={{ fontSize: 13, fontWeight: 800, color: 'white' }}>Procurement Pathway</span>
-              <select className="pw-select" value={selectedId} onChange={e => setSelectedId(e.target.value)} style={{ ...inputStyle, width: 'auto', minWidth: 190, padding: '6px 10px', fontSize: 12, marginLeft: 'auto', background: 'rgba(10,10,22,0.9)' }}>
+            <SectionHead Icon={GitBranch} color={accent} title="Procurement Pathway" tag="ALL 8 STAGES" mb={13}
+              right={<select className="pw-select" value={selectedId} onChange={e => setSelectedId(e.target.value)} style={{ ...inputStyle, width: 'auto', minWidth: 190, padding: '6px 10px', fontSize: 12, marginLeft: 'auto', background: 'rgba(10,10,22,0.9)' }}>
                 {solutions.map(s => <option key={s.id} value={s.id}>{s.name} — {s.stage}</option>)}
                 {solutions.length === 0 && <option value="">No solutions yet</option>}
-              </select>
-            </div>
+              </select>} />
             {pathway && (
               <p style={{ fontSize: 11, color: C.dim, margin: '0 0 12px', lineHeight: 1.5 }}>
                 <b style={{ color: 'rgba(255,255,255,.75)' }}>{pathway.startup.name}</b> · {pathway.startup.tagline} — {pathway.startup.founder} · FitScore™ <span className="metric" style={{ color: accent }}>{pathway.startup.pitch_score}</span>
@@ -501,14 +516,10 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
           {pathway && (<>
             {/* ── Stage 2/3: application + panel ── */}
             <Card color={C.evaluate} style={{ padding: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                <Scale style={{ width: 14, height: 14, color: C.evaluate }} />
-                <span style={{ fontSize: 13, fontWeight: 800, color: 'white' }}>Application & Panel Evaluation</span>
-                <span style={{ fontSize: 10, color: C.dim }}>· Stages 2–3</span>
-              </div>
+              <SectionHead Icon={Scale} color={C.evaluate} title="Application & Panel Evaluation" tag="STAGES 2–3" />
               {pathway.applications.length === 0 && <p style={{ fontSize: 11.5, color: C.dim, margin: 0 }}>No application yet — {mode === 'startup' ? 'apply to a challenge from the board on the left.' : 'this solution has not applied to any challenge.'}</p>}
               {pathway.applications.map(app => (
-                <div key={app.id} style={{ borderRadius: 12, border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)', padding: 12, marginBottom: 9 }}>
+                <div key={app.id} style={{ borderRadius: 12, border: '1px solid rgba(255,255,255,0.07)', background: `radial-gradient(circle at 92% -10%, ${C.evaluate}10, transparent 60%), rgba(255,255,255,0.02)`, padding: 12, marginBottom: 9 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 6 }}>
                     <span className="metric" style={{ fontSize: 10, color: C.challenge }}>{app.challenges?.reference_no}</span>
                     <span style={{ fontSize: 12, fontWeight: 700, color: 'white' }}>{app.challenges?.title ?? 'Challenge'}</span>
@@ -555,11 +566,7 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
 
             {/* ── Stage 4/5: sandbox + contract ── */}
             <Card color={C.sandbox} style={{ padding: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                <FlaskConical style={{ width: 14, height: 14, color: C.sandbox }} />
-                <span style={{ fontSize: 13, fontWeight: 800, color: 'white' }}>Governed Sandbox & Contract</span>
-                <span style={{ fontSize: 10, color: C.dim }}>· Stages 4–5</span>
-              </div>
+              <SectionHead Icon={FlaskConical} color={C.sandbox} title="Governed Sandbox & Contract" tag="STAGES 4–5" />
               {pathway.sandboxes.length === 0 && <p style={{ fontSize: 11.5, color: C.dim, margin: 0 }}>No sandbox agreement yet. One opens after evaluation — with a fixed exit date, security clearance, and IP retained by the startup.</p>}
               {pathway.sandboxes.map(sb => {
                 const dLeft = daysUntil(sb.exit_on);
@@ -598,12 +605,8 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
 
             {/* ── Stage 6: milestones ── */}
             <Card color={C.milestone} style={{ padding: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                <Wallet style={{ width: 14, height: 14, color: C.milestone }} />
-                <span style={{ fontSize: 13, fontWeight: 800, color: 'white' }}>Milestone Payments</span>
-                <span style={{ fontSize: 10, color: C.dim }}>· Stage 6</span>
-                <span className="metric" style={{ marginLeft: 'auto', fontSize: 12, color: C.milestone }}>{fmtL(releasedTotal)} released</span>
-              </div>
+              <SectionHead Icon={Wallet} color={C.milestone} title="Milestone Payments" tag="STAGE 6" mb={4}
+                right={<span className="metric" style={{ marginLeft: 'auto', fontSize: 12, color: C.milestone, background: `${C.milestone}10`, border: `1px solid ${C.milestone}2e`, padding: '3px 10px', borderRadius: 999 }}>{fmtL(releasedTotal)} released</span>} />
               <p style={{ fontSize: 10, color: C.dim, margin: '0 0 12px', lineHeight: 1.5 }}>30% mobilisation advance (GFR Rule 172 ceiling) → 40% mid-term KPI demo → 30% independent validation. MSMED s.15: release within 45 days of verification — the clock below is that rule made visible.</p>
               {pathway.milestones.length === 0 && <p style={{ fontSize: 11.5, color: C.dim, margin: 0 }}>Milestones are set when the sandbox agreement is signed.</p>}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
@@ -611,7 +614,7 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
                   const due = daysUntil(m.due_by);
                   const stCol = m.status === 'released' ? C.milestone : m.status === 'verified' ? C.screen : m.status === 'in_review' ? C.sandbox : m.status === 'rejected' ? C.danger : 'rgba(255,255,255,0.3)';
                   return (
-                    <div key={m.id} style={{ borderRadius: 13, border: `1px solid ${stCol}30`, background: `linear-gradient(160deg,${stCol}0c, rgba(4,4,12,.92))`, padding: 12 }}>
+                    <div key={m.id} style={{ borderRadius: 13, border: `1px solid ${stCol}30`, background: `radial-gradient(circle at 90% -8%, ${stCol}16, transparent 55%), linear-gradient(160deg,${stCol}0c, rgba(4,4,12,.8))`, padding: 12 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 6 }}>
                         <span className="metric" style={{ fontSize: 15, fontWeight: 700, color: stCol }}>{m.pct}%</span>
                         <span style={{ fontSize: 10.5, fontWeight: 700, color: 'white' }}>{m.label}</span>
@@ -642,18 +645,14 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
 
             {/* ── Stage 7: validation ── */}
             <Card color={C.validate} style={{ padding: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                <ShieldCheck style={{ width: 14, height: 14, color: C.validate }} />
-                <span style={{ fontSize: 13, fontWeight: 800, color: 'white' }}>Independent Validation</span>
-                <span style={{ fontSize: 10, color: C.dim }}>· Stage 7</span>
-              </div>
+              <SectionHead Icon={ShieldCheck} color={C.validate} title="Independent Validation" tag="STAGE 7" mb={4} />
               <p style={{ fontSize: 10, color: C.dim, margin: '0 0 12px', lineHeight: 1.5 }}>Targets are locked before measurement begins (pre-registration) — nobody moves the goalposts, in either direction. The validator supplies the measurement; the verdict is computed against the locked target.</p>
               {pathway.kpis.length === 0 && <p style={{ fontSize: 11.5, color: C.dim, margin: 0 }}>KPIs are locked in from the challenge's baseline–target matrix when the pilot starts.</p>}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
                 {pathway.kpis.map(k => {
                   const vCol = k.validation_verdict === 'met' ? C.milestone : k.validation_verdict === 'partially_met' ? C.sandbox : k.validation_verdict === 'not_met' ? C.danger : 'rgba(255,255,255,0.3)';
                   return (
-                    <div key={k.id} style={{ borderRadius: 12, border: `1px solid ${vCol}28`, background: 'rgba(255,255,255,0.02)', padding: 12 }}>
+                    <div key={k.id} style={{ borderRadius: 12, border: `1px solid ${vCol}28`, background: `radial-gradient(circle at 92% -10%, ${vCol}12, transparent 60%), rgba(255,255,255,0.02)`, padding: 12 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 7 }}>
                         <span style={{ fontSize: 11.5, fontWeight: 700, color: 'white' }}>{k.kpi_description}</span>
                         {k.is_go_no_go && <Pill text={`GO/NO-GO · gate ${k.go_no_go_threshold}${k.unit ? ' ' + k.unit : ''}`} color={C.danger} />}
@@ -676,12 +675,8 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
 
             {/* ── Stage 8: scale-up gate ── */}
             <Card color={C.scale} style={{ padding: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
-                <Rocket style={{ width: 14, height: 14, color: C.scale }} />
-                <span style={{ fontSize: 13, fontWeight: 800, color: 'white' }}>Scale-Up Gate</span>
-                <span style={{ fontSize: 10, color: C.dim }}>· Stage 8 · unlocks on 3 satisfactory departmental reports (Odisha model)</span>
-                {isDept && <span style={{ marginLeft: 'auto' }}><Btn color={C.scale} ghost onClick={() => setEndorseOpen(true)}>Endorse pilot</Btn></span>}
-              </div>
+              <SectionHead Icon={Rocket} color={C.scale} title="Scale-Up Gate" tag="STAGE 8" note="unlocks on 3 satisfactory departmental reports (Odisha model)"
+                right={isDept ? <span style={{ marginLeft: 'auto' }}><Btn color={C.scale} ghost onClick={() => setEndorseOpen(true)}>Endorse pilot</Btn></span> : undefined} />
               <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', marginBottom: 12 }}>
                 <div style={{ display: 'flex', gap: 7 }}>
                   {[0, 1, 2].map(i => (
@@ -722,7 +717,10 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
 
       {/* responsive rules: column collapse, modal + form behaviour on phones */}
       <style>{`
-        @media (max-width: 900px){ .pathway-cols{ grid-template-columns: 1fr !important; } }
+        @media (max-width: 900px){
+          .pathway-cols{ grid-template-columns: 1fr !important; }
+          .pathway-left{ position: static !important; max-height: none !important; overflow: visible !important; }
+        }
         .pathway-stepper{ scrollbar-width: none; }
         .pathway-stepper::-webkit-scrollbar{ display: none; }
         .pw-grid2{ display: grid; grid-template-columns: 1fr 1fr; }
