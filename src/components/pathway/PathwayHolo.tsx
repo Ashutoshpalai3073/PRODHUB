@@ -11,7 +11,7 @@ import * as THREE from 'three';
 
 export type HoloKind =
   | 'planet' | 'crystal' | 'binary' | 'cage' | 'rings' | 'gyro' | 'halo' | 'orbit'
-  | 'poly4' | 'poly8' | 'poly12' | 'poly20' | 'mini';
+  | 'poly4' | 'poly8' | 'poly12' | 'poly20' | 'mini' | 'gem';
 
 const SIZE = 160;
 
@@ -78,6 +78,34 @@ function buildScene(kind: HoloKind, colorHex: string): Built {
       mring.rotation.x = Math.PI / 2.6;
       root.add(mring);
       update = t => { root.rotation.y = t * 0.9; mring.rotation.z = t * 0.5; };
+      break;
+    }
+    case 'gem': {
+      // the GeM prize: a cut diamond with sparkles on orbit
+      const g = track(new THREE.OctahedronGeometry(1.15, 0));
+      const gem = new THREE.Mesh(g, wire(0.95));
+      gem.scale.y = 1.4;
+      const inner = new THREE.Mesh(g, fill(0.22));
+      inner.scale.y = 1.4;
+      root.add(gem, inner);
+      const n = 26;
+      const pos = new Float32Array(n * 3);
+      const seeds: number[] = [];
+      for (let i = 0; i < n; i++) seeds.push(Math.random() * Math.PI * 2, 1.5 + Math.random() * 0.7, 0.5 + Math.random() * 0.8);
+      const pg = track(new THREE.BufferGeometry());
+      pg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      root.add(new THREE.Points(pg, track(new THREE.PointsMaterial({ color, size: 0.07, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false }))));
+      update = t => {
+        root.rotation.y = t * 0.6;
+        root.position.y = Math.sin(t * 0.8) * 0.1;
+        for (let i = 0; i < n; i++) {
+          const a = seeds[i * 3] + t * seeds[i * 3 + 2];
+          pos[i * 3] = Math.cos(a) * seeds[i * 3 + 1];
+          pos[i * 3 + 1] = Math.sin(a * 1.3 + i) * 0.9;
+          pos[i * 3 + 2] = Math.sin(a) * seeds[i * 3 + 1];
+        }
+        pg.attributes.position.needsUpdate = true;
+      };
       break;
     }
     case 'planet': {

@@ -748,12 +748,17 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
               <SectionHead Icon={Rocket} color={C.scale} title="Scale-Up Gate" tag="STAGE 8" note="unlocks on 3 satisfactory departmental reports (Odisha model)"
                 right={isDept ? <span style={{ marginLeft: 'auto' }}><Btn color={C.scale} ghost onClick={() => setEndorseOpen(true)}>Endorse pilot</Btn></span> : undefined} />
               <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', marginBottom: 12 }}>
-                <div style={{ display: 'flex', gap: 7 }}>
-                  {[0, 1, 2].map(i => (
-                    <div key={i} style={{ width: 34, height: 34, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: i < gate.satisfactory_count ? C.scale : 'rgba(255,255,255,0.05)', border: `1.5px solid ${i < gate.satisfactory_count ? C.scale : 'rgba(255,255,255,0.14)'}` }}>
-                      {i < gate.satisfactory_count ? <Building2 style={{ width: 15, height: 15, color: '#04040c' }} /> : <Building2 style={{ width: 15, height: 15, color: 'rgba(255,255,255,0.22)' }} />}
-                    </div>
-                  ))}
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {/* the gate meter: one planet per department, lit as reports land */}
+                  {[0, 1, 2].map(i => {
+                    const on = i < gate.satisfactory_count;
+                    return (
+                      <div key={i} style={{ position: 'relative', width: 36, height: 36 }}>
+                        <MiniPlanet color={C.scale} size={36} dim={!on} glow={on} />
+                        <Building2 style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 12, height: 12, color: on ? C.scale : 'rgba(255,255,255,0.25)' }} />
+                      </div>
+                    );
+                  })}
                 </div>
                 <div>
                   <p className="metric" style={{ fontSize: 15, fontWeight: 700, color: gate.gate_unlocked ? C.scale : 'white', margin: 0 }}>{gate.satisfactory_count} / 3 {gate.gate_unlocked && '· GATE UNLOCKED'}</p>
@@ -764,20 +769,32 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
                   <p className="metric" style={{ fontSize: 19, fontWeight: 700, color: scorecard.total >= 60 ? C.scale : C.sandbox, margin: 0 }}>{scorecard.total}<span style={{ fontSize: 10, color: C.dim }}>/100</span></p>
                 </div>
               </div>
-              {pathway.endorsements.map(e => (
-                <div key={e.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 9, padding: '8px 11px', borderRadius: 10, background: `${e.verdict === 'satisfactory' ? C.scale : C.danger}0a`, border: `1px solid ${e.verdict === 'satisfactory' ? C.scale : C.danger}20`, marginBottom: 6 }}>
-                  {e.verdict === 'satisfactory' ? <CheckCircle2 style={{ width: 13, height: 13, color: C.scale, flexShrink: 0, marginTop: 1 }} /> : <AlertTriangle style={{ width: 13, height: 13, color: C.danger, flexShrink: 0, marginTop: 1 }} />}
-                  <div>
-                    <p style={{ fontSize: 11.5, fontWeight: 700, color: 'white', margin: 0 }}>{e.department_name} <span style={{ fontWeight: 400, color: C.dim, fontSize: 9.5 }}>· {e.pilot_ref} · {fmtDate(e.created_at)}</span></p>
-                    {e.note && <p style={{ fontSize: 10.5, color: 'rgba(255,255,255,.5)', margin: '3px 0 0', lineHeight: 1.45 }}>{e.note}</p>}
+              {pathway.endorsements.map(e => {
+                const vc = e.verdict === 'satisfactory' ? C.scale : C.danger;
+                return (
+                  <div key={e.id} style={{ position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'flex-start', gap: 9, padding: '9px 12px 9px 15px', borderRadius: 10, background: `${vc}0a`, border: `1px solid ${vc}20`, marginBottom: 6 }}>
+                    <Constellation seed={e.department_name} color={vc} opacity={0.35} />
+                    <span aria-hidden style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${vc}cc, ${vc}11)`, zIndex: 1 }} />
+                    {e.verdict === 'satisfactory' ? <CheckCircle2 style={{ width: 13, height: 13, color: C.scale, flexShrink: 0, marginTop: 3, position: 'relative', zIndex: 1 }} /> : <AlertTriangle style={{ width: 13, height: 13, color: C.danger, flexShrink: 0, marginTop: 3, position: 'relative', zIndex: 1 }} />}
+                    <div style={{ position: 'relative', zIndex: 1, flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: 11.5, fontWeight: 700, color: 'white', margin: 0 }}>{e.department_name} <span style={{ fontWeight: 400, color: C.dim, fontSize: 9.5 }}>· {e.pilot_ref} · {fmtDate(e.created_at)}</span></p>
+                      {e.note && <p style={{ fontSize: 10.5, color: 'rgba(255,255,255,.5)', margin: '3px 0 0', lineHeight: 1.45 }}>{e.note}</p>}
+                    </div>
+                    <div style={{ position: 'relative', zIndex: 1, alignSelf: 'center', flexShrink: 0 }}>
+                      <MiniPlanet color={vc} size={26} glow />
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               {gate.gate_unlocked && (
-                <div style={{ marginTop: 10, padding: 13, borderRadius: 12, background: `linear-gradient(120deg,${C.scale}14, transparent)`, border: `1px solid ${C.scale}35` }}>
-                  <p style={{ fontSize: 11.5, fontWeight: 800, color: C.scale, margin: '0 0 5px' }}>PROCUREMENT BRIDGE → GeM</p>
-                  <p style={{ fontSize: 10.5, color: 'rgba(255,255,255,.55)', margin: '0 0 10px', lineHeight: 1.55 }}>Validated and gate-cleared. Next compliant step: list on GeM (Startup Runway) with the evidence pack attached, for direct purchase within GFR Rule 149 thresholds — no fresh tender required.</p>
-                  <Btn color={C.scale} onClick={() => { download(`GeM_listing_${pathway.startup.name.replace(/\s+/g, '_')}.md`, gemExportMd(pathway)); flash('ok', 'GeM listing draft downloaded with the full evidence pack.'); }}><Download style={{ width: 12, height: 12 }} />Export GeM listing draft</Btn>
+                <div style={{ marginTop: 10, padding: 13, borderRadius: 12, background: `linear-gradient(120deg,${C.scale}14, transparent)`, border: `1px solid ${C.scale}35`, position: 'relative', overflow: 'hidden' }}>
+                  {/* the prize itself: a spinning gem with sparkles on orbit */}
+                  <CardHolo kind="gem" color={C.scale} size={132} />
+                  <div style={{ position: 'relative', zIndex: 1, paddingRight: 56 }}>
+                    <p style={{ fontSize: 11.5, fontWeight: 800, color: C.scale, margin: '0 0 5px' }}>PROCUREMENT BRIDGE → GeM</p>
+                    <p style={{ fontSize: 10.5, color: 'rgba(255,255,255,.55)', margin: '0 0 10px', lineHeight: 1.55 }}>Validated and gate-cleared. Next compliant step: list on GeM (Startup Runway) with the evidence pack attached, for direct purchase within GFR Rule 149 thresholds — no fresh tender required.</p>
+                    <Btn color={C.scale} onClick={() => { download(`GeM_listing_${pathway.startup.name.replace(/\s+/g, '_')}.md`, gemExportMd(pathway)); flash('ok', 'GeM listing draft downloaded with the full evidence pack.'); }}><Download style={{ width: 12, height: 12 }} />Export GeM listing draft</Btn>
+                  </div>
                 </div>
               )}
             </Card>
