@@ -8,8 +8,10 @@
 // cards had vertically. The background camera (PathwayCosmos) shares the same
 // flight, closing in on the planet as you travel.
 //
-// On touch devices it falls back to the plain vertical stack — the wheel is
-// the whole interaction, so no wheel, no voyage.
+// On phones / touch the same story plays on NATIVE scroll instead: each stage
+// gets its own run of open space and its card materialises one by one as the
+// page scrolls — no wheel hijack, the page itself is the flight (MobileVoyage
+// below). The cosmos camera follows the same voyage.progress either way.
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { voyage } from './voyageState';
@@ -33,7 +35,7 @@ export function StageVoyage({
   labels?: string[];
   colors?: string[];
 }) {
-  const [coarse, setCoarse] = useState(false);
+  const [mobileFlow, setMobileFlow] = useState(false);
   const [idx, setIdx] = useState(0);       // nearest node (drives the rail)
   const [atCard, setAtCard] = useState(false); // a card is currently materialised
   const [flown, setFlown] = useState(false);   // user has scrolled at least once
@@ -49,10 +51,18 @@ export function StageVoyage({
   const flownRef = useRef(false);
   const kickRef = useRef<() => void>(() => {});
 
-  useEffect(() => { setCoarse(window.matchMedia('(pointer: coarse)').matches); }, []);
+  // live-tracked: touch pointer OR narrow viewport → the scroll-driven voyage.
+  // (live, so toggling devtools device emulation switches modes without reload)
+  useEffect(() => {
+    const mqs = [window.matchMedia('(pointer: coarse)'), window.matchMedia('(max-width: 900px)')];
+    const update = () => setMobileFlow(mqs.some(m => m.matches));
+    update();
+    mqs.forEach(m => m.addEventListener('change', update));
+    return () => mqs.forEach(m => m.removeEventListener('change', update));
+  }, []);
 
   useEffect(() => {
-    if (coarse) return;
+    if (mobileFlow) return;
     const vp = viewportRef.current;
     if (!vp) return;
     const n = slides.length;
@@ -171,7 +181,7 @@ export function StageVoyage({
       mo.disconnect();
       clearTimeout(moT);
     };
-  }, [coarse, slides.length]);
+  }, [mobileFlow, slides.length]);
 
   const jump = (i: number) => {
     tgt.current = LEAD + i * SPACING;
@@ -179,13 +189,11 @@ export function StageVoyage({
     kickRef.current();
   };
 
-  // Touch devices: the wheel IS the interaction — fall back to the plain stack.
-  if (coarse) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {slides.map((s, i) => <div key={i}>{s}</div>)}
-      </div>
-    );
+  // Phones / touch: native scroll IS the flight — each stage sits in its own
+  // run of black space and materialises as it crosses the centre of the
+  // screen, one by one, exactly the rhythm of the wheel voyage.
+  if (mobileFlow) {
+    return <MobileVoyage slides={slides} />;
   }
 
   const accent = colors[idx] ?? '#a78bfa';
@@ -266,6 +274,76 @@ export function StageVoyage({
         )}
       </div>
       <style>{'@keyframes voyage-hint{0%,100%{opacity:.35}50%{opacity:.9}}'}</style>
+    </div>
+  );
+}
+
+// ─── the phone voyage: scroll-driven, no wheel hijack ─────────────────────────
+// Mirrors the desktop flight on native scrolling: every stage occupies most of
+// a screen of space (blank cosmos between them, the planet backdrop showing
+// through), and its card fades/rises in as its segment approaches the centre
+// of the viewport, then dissolves as you scroll past — one card at a time.
+// voyage.progress keeps feeding the PathwayCosmos camera exactly like the
+// wheel flight does, so the planet still grows as you travel. Works no matter
+// which ancestor is the scroller (hub <main> / scout main / the ≤900 column):
+// positions are read viewport-relative, and the scroll listener captures.
+function MobileVoyage({ slides }: { slides: ReactNode[] }) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let raf = 0;
+    let queued = false;
+
+    const apply = () => {
+      queued = false;
+      const vh = window.innerHeight || 1;
+      const wr = wrap.getBoundingClientRect();
+      // overall flight progress → the cosmos closes in on the planet
+      voyage.progress = wr.height > vh ? Math.max(0, Math.min(1, -wr.top / (wr.height - vh))) : 0;
+      cardRefs.current.forEach(el => {
+        if (!el) return;
+        if (reduced) { el.style.opacity = '1'; el.style.transform = 'none'; return; }
+        const r = el.getBoundingClientRect();
+        const norm = (r.top + r.height / 2 - vh / 2) / vh;   // 0 = centred on screen
+        const a = Math.abs(norm);
+        el.style.opacity = Math.max(0, Math.min(1, 1.18 - a * 1.9)).toFixed(3);
+        el.style.transform = `translateY(${(norm * 44).toFixed(1)}px) scale(${(0.94 + 0.06 * Math.max(0, 1 - a * 1.5)).toFixed(3)})`;
+      });
+    };
+    const queue = () => { if (!queued) { queued = true; raf = requestAnimationFrame(apply); } };
+
+    // capture-phase: the hub/scout scroller is an inner <main>, and scroll
+    // events do not bubble — capture sees them wherever they happen
+    window.addEventListener('scroll', queue, { capture: true, passive: true });
+    window.addEventListener('resize', queue);
+    const ro = new ResizeObserver(queue);   // async pathway data reflows the cards
+    ro.observe(wrap);
+    apply();
+    return () => {
+      window.removeEventListener('scroll', queue, true);
+      window.removeEventListener('resize', queue);
+      ro.disconnect();
+      cancelAnimationFrame(raf);
+      voyage.progress = 0;
+    };
+  }, [slides.length]);
+
+  return (
+    <div ref={wrapRef}>
+      {slides.map((s, i) => (
+        <div key={i} className="pw-stage-seg" style={{ display: 'flex', alignItems: 'center' }}>
+          <div ref={el => { cardRefs.current[i] = el; }} style={{ width: '100%', opacity: 0, willChange: 'transform, opacity' }}>
+            {s}
+          </div>
+        </div>
+      ))}
+      {/* dvh where supported, so segments track the REAL visible height while
+          the phone browser chrome collapses/expands */}
+      <style>{'.pw-stage-seg{ min-height: 84vh; min-height: 84dvh; }'}</style>
     </div>
   );
 }

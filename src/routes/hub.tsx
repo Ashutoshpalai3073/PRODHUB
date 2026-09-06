@@ -1817,7 +1817,7 @@ function HubPage() {
             </button>
             <div>
               <h2 className="hub-topbar-title text-base font-semibold text-white">{navItems.find(n => n.id === tab)?.label}</h2>
-              <p className="text-[11px] text-white/25 mt-0.5">{tab === 'funding' ? 'Live Cross-Border Matchmaking & Capital Activity' : 'Sanyog Procurement Pathway · Live'}</p>
+              <p className="hub-topbar-sub text-[11px] text-white/25 mt-0.5">{tab === 'funding' ? 'Live Cross-Border Matchmaking & Capital Activity' : 'Sanyog Procurement Pathway · Live'}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -1923,8 +1923,8 @@ function HubPage() {
               </>
             )}
             <button onClick={() => requireAuth('Sign in to register your startup on Sanyog.', () => setRegisterOpen(true))}
-              className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold bg-gradient-to-r from-violet-600 to-sky-500 text-white hover:opacity-90 transition shadow-lg shadow-violet-500/20">
-              <Plus className="h-3.5 w-3.5" /> Register Startup
+              className="hub-register-btn flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold bg-gradient-to-r from-violet-600 to-sky-500 text-white hover:opacity-90 transition shadow-lg shadow-violet-500/20">
+              <Plus className="h-3.5 w-3.5" /> Register<span className="hub-register-word">&nbsp;Startup</span>
             </button>
           </div>
         </header>

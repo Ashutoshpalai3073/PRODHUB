@@ -110,7 +110,7 @@ const inputStyle: React.CSSProperties = { width: '100%', boxSizing: 'border-box'
 
 function Modal({ title, color, onClose, children, wide }: { title: string; color: string; onClose: () => void; children: React.ReactNode; wide?: boolean }) {
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 90, background: 'rgba(2,2,8,0.78)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 18 }}>
+    <div onClick={onClose} className="pw-modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 90, background: 'rgba(2,2,8,0.78)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 18 }}>
       <div onClick={e => e.stopPropagation()} className="analytics-scroll pw-modal" style={{ width: '100%', maxWidth: wide ? 760 : 560, maxHeight: '88vh', overflowY: 'auto', borderRadius: 20, border: `1px solid ${color}35`, background: 'linear-gradient(160deg, rgba(14,12,28,0.98), rgba(5,5,12,0.99))', boxShadow: `0 24px 90px rgba(0,0,0,0.7), 0 0 60px ${color}12`, padding: 22 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
           <span style={{ width: 8, height: 8, borderRadius: '50%', background: color, boxShadow: `0 0 10px ${color}` }} />
@@ -436,11 +436,11 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
     <div style={{ flex: 1, minHeight: 0, position: 'relative', overflow: 'hidden', borderRadius: 18 }}>
       {/* the star-sea lives behind everything; content scrolls above it */}
       <PathwayCosmos accent={accent} />
-      <div aria-hidden style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse at 50% 10%, rgba(5,5,12,0) 45%, rgba(5,5,12,0.5) 100%)' }} />
+      <div aria-hidden className="pw-vignette" style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse at 50% 10%, rgba(5,5,12,0) 45%, rgba(5,5,12,0.5) 100%)' }} />
       <div className="pathway-scroll" style={{ position: 'relative', zIndex: 1, height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: 14 }}>
 
       {/* ── KPI strip ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, flexShrink: 0 }}>
+      <div className="pw-kpis" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, flexShrink: 0 }}>
         {[
           { label: 'Open Challenges', val: String(openChallenges.length), sub: 'accepting applications', color: C.challenge, Icon: Landmark },
           { label: 'Solutions on Pathway', val: String(solutions.length), sub: 'verified & live', color: C.screen, Icon: GitBranch },
@@ -454,7 +454,7 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
                 <p className="metric" style={{ fontSize: 21, fontWeight: 700, color: 'white', margin: '2px 0 2px' }}>{k.val}</p>
                 <p style={{ fontSize: 10, color: k.color, margin: 0, opacity: .85 }}>{k.sub}</p>
               </div>
-              <div style={{ width: 30, height: 30, borderRadius: 9, background: `${k.color}16`, border: `1px solid ${k.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><k.Icon style={{ width: 14, height: 14, color: k.color }} /></div>
+              <div className="pw-kpi-icon" style={{ width: 30, height: 30, borderRadius: 9, background: `${k.color}16`, border: `1px solid ${k.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><k.Icon style={{ width: 14, height: 14, color: k.color }} /></div>
             </div>
           </Card>
         ))}
@@ -725,7 +725,7 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
               <p style={{ fontSize: 10, color: C.dim, margin: '0 0 12px', lineHeight: 1.5 }}>Targets are locked before measurement begins (pre-registration) — nobody moves the goalposts, in either direction. The validator supplies the measurement; the verdict is computed against the locked target.</p>
               {pathway.kpis.length === 0 && <p style={{ fontSize: 11.5, color: C.dim, margin: 0 }}>KPIs are locked in from the challenge's baseline–target matrix when the pilot starts.</p>}
               {/* side-by-side: uses the card's width so the card stays short and unshrunk */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(330px, 1fr))', gap: 10 }}>
+              <div className="pw-validate-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(330px, 1fr))', gap: 10 }}>
                 {pathway.kpis.map(k => {
                   const vCol = k.validation_verdict === 'met' ? C.milestone : k.validation_verdict === 'partially_met' ? C.sandbox : k.validation_verdict === 'not_met' ? C.danger : 'rgba(255,255,255,0.3)';
                   return (
@@ -777,7 +777,7 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
                 </div>
               </div>
               {/* three-up: endorsements share one row so the card stays short */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 10 }}>
+              <div className="pw-endorse-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 10 }}>
               {pathway.endorsements.map(e => {
                 const vc = e.verdict === 'satisfactory' ? C.scale : C.danger;
                 return (
@@ -802,7 +802,7 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
                   <CardHolo kind="gem" color={C.scale} size={110} />
                   {/* one horizontal row — button beside the text, not under it —
                       keeps the card short enough to render at full 100% size */}
-                  <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 18, paddingRight: 44 }}>
+                  <div className="pw-gem-row" style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 18, paddingRight: 44 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ fontSize: 12.5, fontWeight: 800, color: C.scale, margin: '0 0 5px' }}>PROCUREMENT BRIDGE → GeM</p>
                     <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,.62)', margin: 0, lineHeight: 1.55 }}>Validated and gate-cleared. Next compliant step: list on GeM (Startup Runway) with the evidence pack attached, for direct purchase within GFR Rule 149 thresholds — no fresh tender required.</p>
@@ -848,9 +848,47 @@ export function PathwayTab({ mode }: { mode: 'startup' | 'department' }) {
         .pw-grid2{ display: grid; grid-template-columns: 1fr 1fr; }
         @media (max-width: 640px){
           .pw-grid2{ grid-template-columns: 1fr; }
-          .pw-modal{ max-width: 100% !important; padding: 14px !important; max-height: 94vh !important; border-radius: 14px !important; }
+          .pw-modal{ max-width: 100% !important; padding: 14px !important; max-height: 94vh !important; max-height: 94dvh !important; border-radius: 14px !important; }
           .pw-select{ width: 100% !important; margin-left: 0 !important; min-width: 0 !important; }
           .pathway-scroll{ gap: 10px !important; }
+        }
+        /* ── phones: stack the wide stage grids, declutter the KPI tiles ── */
+        @media (max-width: 768px){
+          /* THE "page won't scroll" fix: on phones the page is ONE outer
+             scroller, but these carried snap + overscroll-contain while being
+             (empty) scroll containers — a container with nothing to scroll
+             plus contain EATS the gesture instead of passing it to the page.
+             Make them plain flow boxes here; the ≤900 tablet band and desktop
+             keep their real inner scrolling untouched. */
+          .pathway-cols, .pathway-left, .pathway-right{
+            overflow: visible !important;
+            overscroll-behavior: auto !important;
+            scroll-snap-type: none !important;
+          }
+          /* the edge-darkening veil was authored for the wide panel — on the
+             tall phone column it blacks out the voyage; the cosmos IS the
+             backdrop there, so let it shine */
+          .pw-vignette{ display: none !important; }
+          /* 2×2 KPI strip — auto-fit collapses to one tall column on small
+             phones and crams the tiles on larger ones */
+          .pw-kpis{ grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 9px !important; }
+          /* the flat icon tile collides with the 3D holo at phone card widths —
+             the holo IS the identity, so the duplicate goes */
+          .pw-kpi-icon{ display: none !important; }
+          /* these minimums (330px / 280px) are wider than a phone card and made
+             the whole right lane pan sideways */
+          .pw-validate-grid, .pw-endorse-grid{ grid-template-columns: 1fr !important; }
+          /* GeM bridge: let the export button wrap under the text */
+          .pw-gem-row{ flex-wrap: wrap !important; padding-right: 0 !important; }
+          /* 16px stops iOS Safari auto-zooming the page on input focus */
+          .pw-modal input, .pw-modal select, .pw-modal textarea{ font-size: 16px !important; }
+          .pathway-stepper{ -webkit-overflow-scrolling: touch; }
+        }
+        @media (max-width: 480px){
+          .pw-modal-overlay{ padding: 10px !important; }
+          .pw-kpis .metric{ font-size: 19px !important; }
+          /* narrower steps → a fifth planet peeks in, hinting the strip scrolls */
+          .pathway-stepper > *{ min-width: 64px !important; }
         }
       `}</style>
 

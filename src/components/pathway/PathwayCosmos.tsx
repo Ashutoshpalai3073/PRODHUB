@@ -35,7 +35,7 @@ export function PathwayCosmos({ accent = '#8b5cf6' }: { accent?: string }) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1 : 1.5));
     renderer.setClearColor(0x000000, 0);
     Object.assign(renderer.domElement.style, {
-      position: 'absolute', inset: '0', width: '100%', height: '100%',
+      position: 'absolute', top: '0', left: '0', width: '100%', height: '100%',
       display: 'block', pointerEvents: 'none',
     } as CSSStyleDeclaration);
     host.appendChild(renderer.domElement);
@@ -162,14 +162,27 @@ export function PathwayCosmos({ accent = '#8b5cf6' }: { accent?: string }) {
     const target = { x: 0, y: 0 };
 
     const resize = () => {
-      const w = host.clientWidth || 1, h = host.clientHeight || 1;
+      const w = host.clientWidth || 1;
+      const hFull = host.clientHeight || 1;
+      // Phone single-scroll: the host is the WHOLE page column (thousands of
+      // px tall). Rendering the scene onto that crushes the horizontal FOV to
+      // a sliver — pure black with two dots. So the canvas is only ever one
+      // viewport tall (full starfield, sane aspect) and tick() glues it to
+      // the visible screen as the page scrolls.
+      const h = Math.min(hFull, window.innerHeight || hFull);
       camera.aspect = w / h;
+      // Portrait: the composition was authored for wide panels — pull the
+      // whole system in so the ringed planet and accretion disk sit in frame.
+      const portrait = camera.aspect < 0.9;
+      scene.scale.setScalar(portrait ? 0.62 : 1);
+      scene.position.y = portrait ? -1.2 : -2.2;
       camera.updateProjectionMatrix();
-      renderer.setSize(w, h, false);
+      renderer.setSize(w, h);
     };
     resize();
     const ro = new ResizeObserver(resize);
     ro.observe(host);
+    window.addEventListener('resize', resize);
 
     const onPointer = (e: PointerEvent) => {
       const rect = host.getBoundingClientRect();
@@ -199,6 +212,18 @@ export function PathwayCosmos({ accent = '#8b5cf6' }: { accent?: string }) {
       camera.position.y += (0.6 - target.y * 1.2 - vprog * 0.9 - camera.position.y) * 0.03;
       camera.position.z += (14 - vprog * 9.5 - camera.position.z) * 0.04;
       camera.lookAt(vprog * 3.4, -vprog * 0.9, -2);
+      // tall host (phone single-scroll): keep the viewport-sized canvas glued
+      // to the visible window — a "fixed" background that stays inside the
+      // tab's own clip, so it never paints over the header
+      const hostH = host.clientHeight;
+      const canvasH = renderer.domElement.clientHeight || 1;
+      if (hostH - canvasH > 1) {
+        const top = host.getBoundingClientRect().top;
+        const y = Math.min(Math.max(0, -top), hostH - canvasH);
+        renderer.domElement.style.transform = `translate3d(0, ${y.toFixed(0)}px, 0)`;
+      } else if (renderer.domElement.style.transform) {
+        renderer.domElement.style.transform = '';
+      }
       renderer.render(scene, camera);
       raf = requestAnimationFrame(tick);
     };
@@ -215,6 +240,7 @@ export function PathwayCosmos({ accent = '#8b5cf6' }: { accent?: string }) {
       cancelAnimationFrame(raf);
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('pointermove', onPointer);
+      window.removeEventListener('resize', resize);
       ro.disconnect();
       disposables.forEach(d => d.dispose());
       renderer.dispose();

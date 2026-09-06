@@ -1523,3 +1523,21 @@ img, video { max-width: 100%; height: auto; }
   .ea-stats-cta { flex-wrap: wrap !important; flex: 1 1 100% !important; }
   .ea-add-event { flex: 1 1 100% !important; justify-content: center !important; }
 }
+
+/* ── Hub top bar on phones (Challenge Board & every tab): the Register CTA
+   stays on ONE line and the subtitle truncates instead of wrapping under the
+   title — keeps the header a single compact row. ── */
+@media (max-width: 768px) {
+  .hub-register-btn { white-space: nowrap !important; flex-shrink: 0; }
+  .hub-topbar-sub {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 44vw;
+  }
+}
+@media (max-width: 480px) {
+  .hub-register-btn { padding: 7px 12px !important; }
+  /* icon + "Register" only — the word "Startup" returns on wider screens */
+  .hub-register-word { display: none !important; }
+}
